@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import sessions from "./data/sessions.json";
+import fallbackSessions from "./data/sessions.json";
 
 const EASTERN_TZ = "America/New_York";
 const FIXED_STUDIO_COUNT = 51;
@@ -399,6 +399,7 @@ const ScheduleSection = ({ now, activeSessions }) => {
 
 export default function App() {
   const [now, setNow] = useState(() => floorToMinute(new Date()));
+  const [sessions, setSessions] = useState(fallbackSessions);
   const [displayToday, setDisplayToday] = useState("0");
   const [displayTomorrow, setDisplayTomorrow] = useState("0");
   const [displayStudios, setDisplayStudios] = useState("0");
@@ -427,6 +428,27 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    fetch("/api/sessions")
+      .then((response) => {
+        if (!response.ok) throw new Error("Unable to load Airtable sessions");
+        return response.json();
+      })
+      .then((payload) => {
+        if (!isMounted || !Array.isArray(payload.sessions)) return;
+        setSessions(payload.sessions);
+      })
+      .catch(() => {
+        if (isMounted) setSessions(fallbackSessions);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const todayKey = useMemo(() => getEasternDateKey(now), [now]);
   const tomorrowKey = useMemo(() => getEasternDateKey(addDays(now, 1)), [now]);
 
@@ -436,7 +458,7 @@ export default function App() {
         .filter((session) => !isCancelled(session.status))
         .map(normalizeSession)
         .filter((session) => !Number.isNaN(session.startDate.getTime())),
-    []
+    [sessions]
   );
 
   const todayCount = useMemo(
