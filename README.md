@@ -33,6 +33,17 @@ Optional overrides are already defaulted to the current base/table:
 
 Only set `AIRTABLE_VIEW_ID` if you intentionally want the site limited to one Airtable view.
 
+## Stripe Membership
+
+The signup page starts Stripe Checkout through `/api/create-checkout-session`.
+
+Set these Netlify environment variables:
+
+- `STRIPE_SECRET_KEY`
+- `STRIPE_PRICE_ID`
+
+After a successful checkout, Stripe returns members to `/profile`, where payment is verified before the profile form unlocks the calendar.
+
 ## Updating Session Data
 
 For local fallback, class/session records live in `src/data/sessions.json`.
@@ -55,4 +66,4 @@ The app counts:
 - sessions tomorrow
 - studios in network
 
-When Airtable is configured in Netlify, the fallback JSON is replaced by the live Airtable records.
+When the source data is ready, this local JSON can be replaced with Airtable, Google Sheets, Supabase, or a Netlify function.

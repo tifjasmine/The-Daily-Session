@@ -11,6 +11,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/create-checkout-session"
+  to = "/.netlify/functions/create-checkout-session"
+  status = 200
+
+[[redirects]]
+  from = "/api/verify-checkout-session"
+  to = "/.netlify/functions/verify-checkout-session"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

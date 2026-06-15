@@ -169,8 +169,456 @@ const normalizeSession = (session) => ({
   title: session.title || session.className || "Untitled Class",
   studio: session.studio || session.studioName || "Studio",
   category: session.category || "Class",
+  neighborhood: session.neighborhood || "",
+  level: session.level || "",
+  dropInRate: session.dropInRate || session.rate || "",
+  description: session.description || "",
   startDate: new Date(session.start)
 });
+
+const navigateTo = (path) => {
+  window.history.pushState({}, "", path);
+  window.dispatchEvent(new PopStateEvent("popstate"));
+};
+
+const getStoredMember = () => {
+  try {
+    return JSON.parse(window.localStorage.getItem("tdsMember") || "null");
+  } catch {
+    return null;
+  }
+};
+
+const setStoredMember = (member) => {
+  window.localStorage.setItem("tdsMember", JSON.stringify(member));
+};
+
+const HeaderLogo = () => (
+  <button type="button" className="tds-nav-logo" onClick={() => navigateTo("/")}>
+    <MiniCalendarLogo />
+    <span>The Daily Session</span>
+  </button>
+);
+
+const AppNav = ({ member }) => (
+  <nav className="tds-nav" aria-label="Main navigation">
+    <HeaderLogo />
+    <div>
+      <button type="button" onClick={() => navigateTo("/")}>
+        Home
+      </button>
+      <button type="button" onClick={() => navigateTo("/calendar")}>
+        Calendar
+      </button>
+      {member ? (
+        <button type="button" onClick={() => navigateTo("/profile")}>
+          Profile
+        </button>
+      ) : (
+        <>
+          <button type="button" onClick={() => navigateTo("/login")}>
+            Log In
+          </button>
+          <button type="button" className="tds-nav-primary" onClick={() => navigateTo("/signup")}>
+            Join
+          </button>
+        </>
+      )}
+    </div>
+  </nav>
+);
+
+const AuthShell = ({ title, eyebrow, children }) => (
+  <main className="tds-auth-page">
+    <div className="tds-auth-card">
+      <HeaderLogo />
+      <span className="tds-auth-eyebrow">{eyebrow}</span>
+      <h1>{title}</h1>
+      {children}
+    </div>
+  </main>
+);
+
+const LoginPage = ({ onMemberChange }) => {
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+
+  const onSubmit = (event) => {
+    event.preventDefault();
+    const member = getStoredMember();
+
+    if (member?.paid && (!email || member.email === email)) {
+      onMemberChange(member);
+      navigateTo(member.profileComplete ? "/calendar" : "/profile");
+      return;
+    }
+
+    setMessage("No paid membership found on this browser yet. Join to start checkout.");
+  };
+
+  return (
+    <AuthShell title="Log in to your calendar" eyebrow="Members">
+      <form className="tds-auth-form" onSubmit={onSubmit}>
+        <label>
+          Email
+          <input
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
+          />
+        </label>
+        {message ? <p className="tds-form-note">{message}</p> : null}
+        <button type="submit">Continue</button>
+      </form>
+      <button type="button" className="tds-link-button" onClick={() => navigateTo("/signup")}>
+        Need a membership? Sign up
+      </button>
+    </AuthShell>
+  );
+};
+
+const SignupPage = () => {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const startCheckout = async (event) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.url) throw new Error(payload.error || "Checkout failed");
+      window.location.href = payload.url;
+    } catch (checkoutError) {
+      setError(checkoutError instanceof Error ? checkoutError.message : "Checkout failed");
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <AuthShell title="Join The Daily Session" eyebrow="Membership">
+      <p className="tds-auth-copy">
+        Unlock the full monthly calendar, filters, class details, and member profile.
+      </p>
+      <form className="tds-auth-form" onSubmit={startCheckout}>
+        <label>
+          Email
+          <input
+            required
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
+          />
+        </label>
+        {error ? <p className="tds-form-error">{error}</p> : null}
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Opening Stripe..." : "Continue to Secure Checkout"}
+        </button>
+      </form>
+      <button type="button" className="tds-link-button" onClick={() => navigateTo("/login")}>
+        Already joined? Log in
+      </button>
+    </AuthShell>
+  );
+};
+
+const ProfilePage = ({ member, onMemberChange }) => {
+  const hasCheckoutSession = new URLSearchParams(window.location.search).has("session_id");
+  const [status, setStatus] = useState("ready");
+  const [form, setForm] = useState({
+    name: member?.name || "",
+    email: member?.email || "",
+    pronouns: member?.pronouns || "",
+    birthday: member?.birthday || "",
+    instagram: member?.instagram || "",
+    neighborhood: member?.neighborhood || "",
+    heard: member?.heard || "",
+    interests: member?.interests || "",
+    experience: member?.experience || "",
+    bio: member?.bio || ""
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    if (!sessionId) return;
+
+    setStatus("verifying");
+    fetch(`/api/verify-checkout-session?session_id=${encodeURIComponent(sessionId)}`)
+      .then((response) => response.json())
+      .then((payload) => {
+        if (!payload.paid) throw new Error("Payment was not completed");
+        const nextMember = {
+          ...getStoredMember(),
+          paid: true,
+          email: payload.email || form.email,
+          stripeCustomerId: payload.customerId,
+          stripeSubscriptionId: payload.subscriptionId
+        };
+        setStoredMember(nextMember);
+        onMemberChange(nextMember);
+        setForm((current) => ({ ...current, email: nextMember.email || current.email }));
+        setStatus("ready");
+        window.history.replaceState({}, "", "/profile");
+      })
+      .catch(() => setStatus("error"));
+  }, []);
+
+  const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
+
+  const saveProfile = (event) => {
+    event.preventDefault();
+    if (!member?.paid) {
+      setStatus("error");
+      return;
+    }
+
+    const nextMember = {
+      ...member,
+      ...form,
+      profileComplete: true
+    };
+    setStoredMember(nextMember);
+    onMemberChange(nextMember);
+    navigateTo("/calendar");
+  };
+
+  if (!member?.paid && !hasCheckoutSession) {
+    return (
+      <AuthShell title="Complete checkout first" eyebrow="Profile">
+        <p className="tds-auth-copy">
+          After your Stripe membership payment, you can finish your profile and open the full calendar.
+        </p>
+        <button type="button" className="tds-auth-main-button" onClick={() => navigateTo("/signup")}>
+          Continue to Membership
+        </button>
+      </AuthShell>
+    );
+  }
+
+  return (
+    <main className="tds-profile-page">
+      <form className="tds-profile-card" onSubmit={saveProfile}>
+        <h1>Hi {form.name || "there"}</h1>
+        <h2>Welcome to The Daily Session!</h2>
+        <p>
+          Your daily guide to movement, wellness, and creative classes happening around
+          Philadelphia.
+        </p>
+        <p>No endless searching.<br />No scattered schedules.<br />Just real experiences, happening today.</p>
+        <h3>Please answer a few questions to complete your profile</h3>
+        {status === "verifying" ? <p className="tds-form-note">Verifying Stripe payment...</p> : null}
+        {status === "error" ? <p className="tds-form-error">Could not verify payment. Try checkout again.</p> : null}
+
+        <label>
+          Name
+          <input value={form.name} onChange={(event) => updateField("name", event.target.value)} placeholder="Name" />
+        </label>
+        <label>
+          Pronouns
+          <input value={form.pronouns} onChange={(event) => updateField("pronouns", event.target.value)} placeholder="Pronouns" />
+        </label>
+        <label>
+          Birthday
+          <input type="date" value={form.birthday} onChange={(event) => updateField("birthday", event.target.value)} />
+        </label>
+        <label>
+          Instagram
+          <input value={form.instagram} onChange={(event) => updateField("instagram", event.target.value)} placeholder="@username" />
+        </label>
+        <label>
+          Neighborhood
+          <select value={form.neighborhood} onChange={(event) => updateField("neighborhood", event.target.value)}>
+            <option value="">Neighborhood</option>
+            <option>Center City</option>
+            <option>Fishtown</option>
+            <option>South Philly</option>
+            <option>West Philly</option>
+            <option>Rittenhouse</option>
+          </select>
+        </label>
+        <label>
+          How did you hear about us?
+          <select value={form.heard} onChange={(event) => updateField("heard", event.target.value)}>
+            <option value="">Select one</option>
+            <option>Instagram</option>
+            <option>Friend</option>
+            <option>Studio</option>
+            <option>Search</option>
+          </select>
+        </label>
+        <label>
+          What interests you?
+          <select value={form.interests} onChange={(event) => updateField("interests", event.target.value)}>
+            <option value="">Interests</option>
+            <option>Yoga and pilates</option>
+            <option>Dance and movement</option>
+            <option>Creative arts</option>
+            <option>Fitness</option>
+          </select>
+        </label>
+        <label>
+          Experience Level
+          <select value={form.experience} onChange={(event) => updateField("experience", event.target.value)}>
+            <option value="">Experience</option>
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option>Advanced</option>
+            <option>All levels</option>
+          </select>
+        </label>
+        <label>
+          Tell us a little bit about yourself!
+          <textarea value={form.bio} onChange={(event) => updateField("bio", event.target.value)} placeholder="Bio" />
+        </label>
+        <button type="submit" disabled={!member?.paid || status === "verifying"}>
+          {status === "verifying" ? "Verifying..." : "Begin Browsing"}
+        </button>
+      </form>
+    </main>
+  );
+};
+
+const PageHeader = () => (
+  <section className="tds-page-header-shell">
+    <div className="tds-page-header-card">
+      <div>
+        <BrandLockup />
+        <span className="tds-page-header-kicker">Monthly Calendar</span>
+        <h1>Explore what's happening this month.</h1>
+        <p>
+          Browse classes across Philadelphia by category, studio, neighborhood, level,
+          and price, all in one place.
+        </p>
+      </div>
+      <aside>
+        <span>Inside this page</span>
+        <h2>Find your next class faster</h2>
+        <p>Use the filters to narrow your options, then browse the month your way.</p>
+      </aside>
+    </div>
+  </section>
+);
+
+const CalendarPage = ({ member, activeSessions }) => {
+  const [category, setCategory] = useState("all");
+  const [query, setQuery] = useState("");
+  const [selectedSession, setSelectedSession] = useState(null);
+
+  if (!member?.paid) {
+    return (
+      <AuthShell title="Members only calendar" eyebrow="Locked">
+        <p className="tds-auth-copy">
+          Purchase a membership to unlock the full monthly calendar.
+        </p>
+        <button type="button" className="tds-auth-main-button" onClick={() => navigateTo("/signup")}>
+          Join to View Calendar
+        </button>
+      </AuthShell>
+    );
+  }
+
+  const categories = ["all", ...Array.from(new Set(activeSessions.map((session) => session.category))).sort()];
+  const filtered = activeSessions
+    .filter((session) => category === "all" || session.category === category)
+    .filter((session) => {
+      const haystack = `${session.title} ${session.studio} ${session.neighborhood}`.toLowerCase();
+      return haystack.includes(query.toLowerCase());
+    })
+    .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+
+  const grouped = filtered.reduce((acc, session) => {
+    const key = formatEasternHeaderDate(session.startDate);
+    if (!acc.has(key)) acc.set(key, []);
+    acc.get(key).push(session);
+    return acc;
+  }, new Map());
+
+  return (
+    <main className="tds-calendar-page">
+      <AppNav member={member} />
+      <PageHeader />
+      <section className="tds-calendar-tools">
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search classes, studios, neighborhoods"
+        />
+        <select value={category} onChange={(event) => setCategory(event.target.value)}>
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat === "all" ? "All Categories" : cat}
+            </option>
+          ))}
+        </select>
+      </section>
+      <section className="tds-calendar-list">
+        {Array.from(grouped.entries()).map(([date, items]) => (
+          <div className="tds-calendar-day" key={date}>
+            <div className="tds-calendar-day-head">
+              <h2>{date}</h2>
+              <span>{items.length} classes</span>
+            </div>
+            <div className="tds-calendar-grid">
+              {items.map((session) => (
+                <article className="tds-calendar-card" key={session.id}>
+                  {session.photo ? <img src={session.photo} alt="" /> : null}
+                  <div>
+                    <span>{formatEasternTime(session.startDate)}</span>
+                    <h3>{session.title}</h3>
+                    <p>{session.studio}</p>
+                    <small>{session.category}{session.neighborhood ? ` · ${session.neighborhood}` : ""}</small>
+                  </div>
+                  <button type="button" onClick={() => setSelectedSession(session)}>
+                    Details
+                  </button>
+                </article>
+              ))}
+            </div>
+          </div>
+        ))}
+      </section>
+      {selectedSession ? (
+        <div className="tds-modal-backdrop" onClick={() => setSelectedSession(null)}>
+          <div className="tds-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="tds-modal-header">
+              <div>
+                <span>{formatEasternTime(selectedSession.startDate)}</span>
+                <h3>{selectedSession.title}</h3>
+              </div>
+              <button type="button" onClick={() => setSelectedSession(null)} aria-label="Close details">
+                ×
+              </button>
+            </div>
+            <div className="tds-modal-body">
+              {selectedSession.photo ? <img src={selectedSession.photo} alt="" /> : null}
+              <div>
+                <span>{selectedSession.category}</span>
+                <p>{selectedSession.studio}</p>
+                <p>{selectedSession.neighborhood}</p>
+                {selectedSession.description ? <p>{selectedSession.description}</p> : null}
+                {selectedSession.studioSite ? (
+                  <a href={selectedSession.studioSite} target="_blank" rel="noreferrer">
+                    Sign Up
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </main>
+  );
+};
 
 const ScheduleSection = ({ now, activeSessions, dataStatus }) => {
   const [activeFilter, setActiveFilter] = useState("all");
@@ -260,10 +708,6 @@ const ScheduleSection = ({ now, activeSessions, dataStatus }) => {
               {visibleItems.length === 1 ? "class" : "classes"}
               {activeFilter !== "all" ? ` in ${activeFilter}` : ""}
               {hasMoreToShow ? " - load more below." : ""}
-            </p>
-            <p className="tds-data-source">
-              Data source: {dataStatus.source}
-              {dataStatus.count ? ` (${dataStatus.count} loaded)` : ""}
             </p>
           </div>
         </div>
@@ -402,6 +846,8 @@ const ScheduleSection = ({ now, activeSessions, dataStatus }) => {
 };
 
 export default function App() {
+  const [path, setPath] = useState(() => window.location.pathname);
+  const [member, setMember] = useState(() => getStoredMember());
   const [now, setNow] = useState(() => floorToMinute(new Date()));
   const [sessions, setSessions] = useState(fallbackSessions);
   const [dataStatus, setDataStatus] = useState({
@@ -418,6 +864,17 @@ export default function App() {
     tomorrow: null,
     studios: null
   });
+
+  useEffect(() => {
+    const onPopState = () => {
+      setPath(window.location.pathname);
+      setMember(getStoredMember());
+    };
+
+    window.addEventListener("popstate", onPopState);
+
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   useEffect(() => {
     const syncToMinute = () => setNow(floorToMinute(new Date()));
@@ -539,8 +996,25 @@ export default function App() {
   const currentDate = useMemo(() => formatEasternLongDate(now), [now]);
   const headingParts = content.mainHeading.split(" ");
 
+  if (path === "/login") {
+    return <LoginPage onMemberChange={setMember} />;
+  }
+
+  if (path === "/signup") {
+    return <SignupPage />;
+  }
+
+  if (path === "/profile") {
+    return <ProfilePage member={member} onMemberChange={setMember} />;
+  }
+
+  if (path === "/calendar") {
+    return <CalendarPage member={member} activeSessions={activeSessions} />;
+  }
+
   return (
     <main className="tds-page">
+      <AppNav member={member} />
       <section className="tds-hero" aria-labelledby="tds-heading">
         <div className="tds-copy">
           <BrandLockup />

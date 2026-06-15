@@ -22,6 +22,73 @@ select {
   font: inherit;
 }
 
+.tds-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid rgba(245, 232, 216, 0.12);
+  background: rgba(61, 34, 22, 0.94);
+  padding: 12px 24px;
+  backdrop-filter: blur(10px);
+}
+
+.tds-nav-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  color: #f5e9d8;
+  cursor: pointer;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.tds-nav-logo .tds-mini-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 7px;
+}
+
+.tds-nav-logo .tds-mini-logo-rings,
+.tds-nav-logo .tds-mini-logo-top {
+  display: none;
+}
+
+.tds-nav-logo .tds-mini-logo-grid {
+  inset: 8px;
+}
+
+.tds-nav > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.tds-nav button:not(.tds-nav-logo) {
+  min-height: 38px;
+  border: 1px solid rgba(245, 232, 216, 0.16);
+  border-radius: 999px;
+  background: transparent;
+  color: #f5e9d8;
+  cursor: pointer;
+  padding: 8px 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.tds-nav button.tds-nav-primary {
+  background: #f5e9d8;
+  color: #4a2412;
+}
+
 .tds-page {
   min-height: 100vh;
   background:
@@ -585,6 +652,322 @@ h1 em {
   margin-top: 12px;
 }
 
+.tds-auth-page,
+.tds-profile-page {
+  min-height: 100vh;
+  background: #4b2e0f;
+  padding: 32px 20px;
+  color: #3d2314;
+}
+
+.tds-auth-card,
+.tds-profile-card {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  border: 2px solid #c4784a;
+  border-radius: 28px;
+  background: #fffdf9;
+  padding: 38px;
+}
+
+.tds-auth-card h1,
+.tds-profile-card h1,
+.tds-profile-card h2,
+.tds-profile-card h3 {
+  color: #3d2314;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.tds-auth-card h1 {
+  margin: 18px 0 12px;
+  font-size: 2.5rem;
+}
+
+.tds-auth-eyebrow {
+  display: inline-flex;
+  margin-top: 28px;
+  color: #c4784a;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.tds-auth-copy,
+.tds-auth-card p {
+  color: #6b4a2f;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.tds-auth-form,
+.tds-profile-card {
+  display: grid;
+  gap: 18px;
+}
+
+.tds-auth-form label,
+.tds-profile-card label {
+  display: grid;
+  gap: 8px;
+  color: #3d2314;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.tds-auth-form input,
+.tds-profile-card input,
+.tds-profile-card select,
+.tds-profile-card textarea,
+.tds-calendar-tools input,
+.tds-calendar-tools select {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #9d7c67;
+  border-radius: 14px;
+  background: #fffdf9;
+  color: #3d2314;
+  padding: 12px 14px;
+  outline: none;
+  font-size: 1rem;
+}
+
+.tds-profile-card textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.tds-auth-form button,
+.tds-auth-main-button,
+.tds-profile-card > button {
+  min-height: 52px;
+  border: 0;
+  border-radius: 14px;
+  background: #4b2414;
+  color: #fffdf9;
+  cursor: pointer;
+  padding: 14px 18px;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.tds-link-button {
+  border: 0;
+  background: transparent;
+  color: #7a4a2a;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  font-weight: 800;
+}
+
+.tds-form-note {
+  margin: 0;
+  color: #8e6c58;
+  font-size: 0.9rem;
+}
+
+.tds-form-error {
+  margin: 0;
+  color: #a14d3a;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.tds-profile-card h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.tds-profile-card h2 {
+  margin: 0;
+  font-size: 1.65rem;
+}
+
+.tds-profile-card h3 {
+  margin: 28px 0 6px;
+  font-size: 1.12rem;
+}
+
+.tds-profile-card p {
+  margin: 0;
+  color: #3d2314;
+  line-height: 1.55;
+}
+
+.tds-calendar-page {
+  min-height: 100vh;
+  background: #f0e7db;
+  color: #5d2b12;
+}
+
+.tds-page-header-shell {
+  background: linear-gradient(135deg, #3d2314 0%, #5a2d12 48%, #7a3208 100%);
+  padding: 24px;
+}
+
+.tds-page-header-card {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+  gap: 24px;
+  align-items: center;
+  border: 1px solid rgba(245, 232, 216, 0.12);
+  border-radius: 18px;
+  background: rgba(245, 232, 216, 0.08);
+  padding: 24px;
+}
+
+.tds-page-header-card h1 {
+  margin: 14px 0;
+  color: #f5e8d8;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  line-height: 1.05;
+}
+
+.tds-page-header-card p {
+  max-width: 680px;
+  margin: 0;
+  color: rgba(245, 232, 216, 0.78);
+  line-height: 1.65;
+}
+
+.tds-page-header-kicker {
+  display: inline-flex;
+  border: 1px solid rgba(245, 232, 216, 0.14);
+  border-radius: 999px;
+  background: rgba(245, 232, 216, 0.12);
+  color: #f3d4b7;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tds-page-header-card aside {
+  border-radius: 14px;
+  background: rgba(245, 232, 216, 0.92);
+  padding: 20px;
+}
+
+.tds-page-header-card aside span {
+  color: #9a7060;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.tds-page-header-card aside h2 {
+  margin: 10px 0;
+  color: #3d2314;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.6rem;
+}
+
+.tds-page-header-card aside p {
+  color: #9a7060;
+}
+
+.tds-calendar-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 12px;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.tds-calendar-list {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 0 24px 64px;
+}
+
+.tds-calendar-day {
+  margin-bottom: 28px;
+}
+
+.tds-calendar-day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgba(93, 43, 18, 0.12);
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+}
+
+.tds-calendar-day-head h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.5rem;
+}
+
+.tds-calendar-day-head span {
+  color: #9a7060;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.tds-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.tds-calendar-card {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 12px;
+  border: 1px solid rgba(93, 43, 18, 0.12);
+  border-radius: 8px;
+  background: #fffdf9;
+  padding: 12px;
+}
+
+.tds-calendar-card img {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.tds-calendar-card span {
+  color: #c4572a;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.tds-calendar-card h3 {
+  margin: 4px 0;
+  color: #3d2314;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.2rem;
+}
+
+.tds-calendar-card p,
+.tds-calendar-card small {
+  margin: 0;
+  color: #8e6c58;
+}
+
+.tds-calendar-card button {
+  grid-column: 1 / -1;
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: #3d2314;
+  color: #f5e8d8;
+  cursor: pointer;
+  font-weight: 800;
+}
+
 @media (max-width: 860px) {
   .tds-hero {
     min-height: auto;
@@ -596,6 +979,16 @@ h1 em {
 
   .tds-panel {
     width: 100%;
+  }
+
+  .tds-nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .tds-page-header-card,
+  .tds-calendar-tools {
+    grid-template-columns: 1fr;
   }
 
   .tds-schedule {
