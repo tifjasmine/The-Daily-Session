@@ -655,19 +655,224 @@ h1 em {
 .tds-auth-page,
 .tds-profile-page {
   min-height: 100vh;
-  background: #4b2e0f;
-  padding: 32px 20px;
+  background:
+    linear-gradient(180deg, rgba(65, 94, 76, 0.18), transparent 34%),
+    linear-gradient(135deg, #3d2216 0%, #5a260d 54%, #7b3a18 100%);
+  padding: 28px 20px;
   color: #3d2314;
 }
 
-.tds-auth-card,
-.tds-profile-card {
-  width: min(760px, 100%);
+.tds-auth-card {
+  width: min(1040px, 100%);
+  min-height: min(720px, calc(100vh - 56px));
   margin: 0 auto;
-  border: 2px solid #c4784a;
-  border-radius: 28px;
-  background: #fffdf9;
-  padding: 38px;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
+  overflow: hidden;
+  border: 1px solid rgba(245, 232, 216, 0.18);
+  border-radius: 22px;
+  background: #fffaf3;
+  box-shadow: 0 26px 80px rgba(28, 13, 6, 0.35);
+}
+
+.tds-auth-brand-panel {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 42px;
+  background:
+    linear-gradient(145deg, rgba(196, 87, 42, 0.22), transparent 56%),
+    #32180f;
+  padding: 34px;
+  color: #f5e9d8;
+}
+
+.tds-auth-brand-panel .tds-brand-lockup {
+  margin-bottom: 0;
+}
+
+.tds-auth-brand-panel > div:last-child {
+  display: grid;
+  gap: 14px;
+}
+
+.tds-auth-brand-panel span {
+  color: #d59d76;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.tds-auth-brand-panel h2 {
+  margin: 0;
+  max-width: 360px;
+  color: #fff3e4;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.2rem, 4vw, 3.45rem);
+  font-weight: 400;
+  line-height: 1.04;
+}
+
+.tds-auth-brand-panel p {
+  max-width: 360px;
+  margin: 0;
+  color: rgba(245, 232, 216, 0.82);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.tds-auth-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(28px, 5vw, 56px);
+}
+
+.tds-profile-card {
+  width: min(1160px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.62fr) minmax(0, 1fr);
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid rgba(196, 120, 74, 0.42);
+  border-radius: 22px;
+  background: #fffaf3;
+  padding: 0;
+  box-shadow: 0 24px 70px rgba(28, 13, 6, 0.32);
+}
+
+.tds-profile-intro {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 34px;
+  background:
+    linear-gradient(150deg, rgba(196, 87, 42, 0.24), transparent 52%),
+    #33180f;
+  padding: clamp(26px, 4vw, 42px);
+  color: #f5e9d8;
+}
+
+.tds-profile-intro .tds-brand-lockup {
+  margin-bottom: 0;
+}
+
+.tds-profile-kicker {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid rgba(245, 232, 216, 0.2);
+  border-radius: 999px;
+  color: #dca376;
+  padding: 8px 12px;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.tds-profile-intro h1 {
+  margin: 0;
+  color: #fff3e4;
+  font-size: clamp(2.65rem, 6vw, 4.5rem);
+  line-height: 0.98;
+}
+
+.tds-profile-intro p {
+  max-width: 380px;
+  margin: 0;
+  color: rgba(245, 232, 216, 0.82);
+  font-size: 1.04rem;
+  line-height: 1.65;
+}
+
+.tds-profile-next {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid rgba(245, 232, 216, 0.16);
+  padding-top: 20px;
+}
+
+.tds-profile-next span {
+  color: #dca376;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.tds-profile-next strong {
+  max-width: 340px;
+  color: #fff3e4;
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+.tds-profile-form {
+  display: grid;
+  gap: 22px;
+  padding: clamp(24px, 4vw, 46px);
+}
+
+.tds-profile-form-head {
+  display: grid;
+  gap: 8px;
+}
+
+.tds-profile-form-head span {
+  color: #c4572a;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.tds-profile-form-head h2 {
+  margin: 0;
+  color: #3d2314;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 400;
+  line-height: 1.05;
+}
+
+.tds-profile-form-head p {
+  max-width: 620px;
+  margin: 0;
+  color: #76533c;
+  line-height: 1.58;
+}
+
+.tds-profile-status:empty {
+  display: none;
+}
+
+.tds-profile-section {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid rgba(157, 124, 103, 0.22);
+  padding: 22px 0 0;
+}
+
+.tds-profile-section legend {
+  color: #7b3a18;
+  padding: 0 12px 0 0;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tds-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .tds-auth-card h1,
@@ -681,8 +886,11 @@ h1 em {
 }
 
 .tds-auth-card h1 {
-  margin: 18px 0 12px;
-  font-size: 2.5rem;
+  max-width: 540px;
+  margin: 14px 0 12px;
+  color: #3d2314;
+  font-size: clamp(2.45rem, 6vw, 4rem);
+  line-height: 1.03;
 }
 
 .tds-auth-eyebrow {
@@ -698,14 +906,14 @@ h1 em {
 .tds-auth-copy,
 .tds-auth-card p {
   color: #6b4a2f;
-  font-size: 1rem;
+  font-size: 1.04rem;
   line-height: 1.65;
 }
 
-.tds-auth-form,
-.tds-profile-card {
+.tds-auth-form {
   display: grid;
-  gap: 18px;
+  gap: 16px;
+  margin-top: 18px;
 }
 
 .tds-auth-form label,
@@ -724,10 +932,10 @@ h1 em {
 }
 
 .tds-plan-picker button {
-  min-height: 72px;
-  border: 1px solid #b58e74;
-  border-radius: 14px;
-  background: #fff9f3;
+  min-height: 82px;
+  border: 1px solid #d5b69e;
+  border-radius: 12px;
+  background: #fffdf9;
   color: #3d2314;
   cursor: pointer;
   display: grid;
@@ -738,8 +946,8 @@ h1 em {
 
 .tds-plan-picker button.is-selected {
   border-color: #4b2414;
-  background: #f1e2d2;
-  box-shadow: inset 0 0 0 2px #4b2414;
+  background: #f3e5d7;
+  box-shadow: inset 0 0 0 2px rgba(75, 36, 20, 0.92);
 }
 
 .tds-plan-picker span {
@@ -759,14 +967,22 @@ h1 em {
 .tds-calendar-tools input,
 .tds-calendar-tools select {
   width: 100%;
-  min-height: 48px;
-  border: 1px solid #9d7c67;
-  border-radius: 14px;
+  min-height: 54px;
+  border: 1px solid #c9a991;
+  border-radius: 12px;
   background: #fffdf9;
   color: #3d2314;
-  padding: 12px 14px;
+  padding: 13px 15px;
   outline: none;
   font-size: 1rem;
+}
+
+.tds-auth-form input:focus,
+.tds-profile-card input:focus,
+.tds-profile-card select:focus,
+.tds-profile-card textarea:focus {
+  border-color: #c4572a;
+  box-shadow: 0 0 0 3px rgba(196, 87, 42, 0.14);
 }
 
 .tds-profile-card textarea {
@@ -776,16 +992,24 @@ h1 em {
 
 .tds-auth-form button,
 .tds-auth-main-button,
-.tds-profile-card > button {
-  min-height: 52px;
+.tds-profile-card > button,
+.tds-profile-actions button {
+  min-height: 56px;
   border: 0;
-  border-radius: 14px;
+  border-radius: 12px;
   background: #4b2414;
   color: #fffdf9;
   cursor: pointer;
   padding: 14px 18px;
   font-size: 1rem;
   font-weight: 800;
+}
+
+.tds-auth-form button:hover,
+.tds-auth-main-button:hover,
+.tds-profile-card > button:hover,
+.tds-profile-actions button:hover {
+  background: #6d310f;
 }
 
 .tds-link-button {
@@ -813,17 +1037,28 @@ h1 em {
 
 .tds-profile-card h1 {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: clamp(2rem, 5vw, 3.2rem);
 }
 
 .tds-profile-card h2 {
   margin: 0;
-  font-size: 1.65rem;
+  color: #5b2a17;
+  font-size: clamp(1.35rem, 3vw, 1.9rem);
+}
+
+.tds-profile-card .tds-profile-form-head h2 {
+  color: #3d2314;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
 }
 
 .tds-profile-card h3 {
-  margin: 28px 0 6px;
-  font-size: 1.12rem;
+  margin: 20px 0 6px;
+  color: #7b3a18;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .tds-profile-card p {
@@ -832,10 +1067,31 @@ h1 em {
   line-height: 1.55;
 }
 
+.tds-profile-card .tds-profile-intro h1 {
+  color: #fff3e4;
+  font-size: clamp(2.65rem, 6vw, 4.5rem);
+  line-height: 0.98;
+}
+
+.tds-profile-card .tds-profile-intro p {
+  color: rgba(245, 232, 216, 0.82);
+}
+
 .tds-profile-passwords {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
+}
+
+.tds-profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid rgba(157, 124, 103, 0.22);
+  padding-top: 22px;
+}
+
+.tds-profile-actions button {
+  width: min(280px, 100%);
 }
 
 .tds-calendar-page {
@@ -1197,6 +1453,23 @@ h1 em {
     flex-direction: column;
   }
 
+  .tds-auth-card {
+    min-height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .tds-auth-brand-panel {
+    min-height: 280px;
+  }
+
+  .tds-profile-card {
+    grid-template-columns: 1fr;
+  }
+
+  .tds-profile-intro {
+    min-height: auto;
+  }
+
   .tds-page-header-card,
   .tds-calendar-tools,
   .tds-calendar-board {
@@ -1311,8 +1584,52 @@ h1 em {
     padding: 28px;
   }
 
+  .tds-auth-page,
+  .tds-profile-page {
+    padding: 14px;
+  }
+
+  .tds-auth-brand-panel {
+    min-height: auto;
+    padding: 24px;
+  }
+
+  .tds-auth-brand-panel h2 {
+    font-size: 2rem;
+  }
+
+  .tds-auth-content {
+    padding: 24px;
+  }
+
+  .tds-profile-intro,
+  .tds-profile-form {
+    padding: 24px;
+  }
+
+  .tds-profile-intro {
+    gap: 22px;
+  }
+
+  .tds-profile-intro h1 {
+    font-size: 2.6rem;
+  }
+
+  .tds-plan-picker {
+    grid-template-columns: 1fr;
+  }
+
+  .tds-profile-grid,
   .tds-profile-passwords {
     grid-template-columns: 1fr;
+  }
+
+  .tds-profile-actions {
+    display: grid;
+  }
+
+  .tds-profile-actions button {
+    width: 100%;
   }
 
   .tds-stat-value {

@@ -436,10 +436,20 @@ const AppNav = ({ member, onLogout }) => (
 const AuthShell = ({ title, eyebrow, children }) => (
   <main className="tds-auth-page">
     <div className="tds-auth-card">
-      <HeaderLogo />
-      <span className="tds-auth-eyebrow">{eyebrow}</span>
-      <h1>{title}</h1>
-      {children}
+      <aside className="tds-auth-brand-panel" aria-hidden="true">
+        <BrandLockup />
+        <div>
+          <span>Member access</span>
+          <h2>One calendar. No scavenger hunt.</h2>
+          <p>Save your profile, open the full month, and find the class that fits today.</p>
+        </div>
+      </aside>
+      <section className="tds-auth-content">
+        <HeaderLogo />
+        <span className="tds-auth-eyebrow">{eyebrow}</span>
+        <h1>{title}</h1>
+        {children}
+      </section>
     </div>
   </main>
 );
@@ -689,6 +699,7 @@ const SignupPage = () => {
 const ProfilePage = ({ member, authSession, onMemberChange, onSessionChange }) => {
   const hasCheckoutSession = new URLSearchParams(window.location.search).has("session_id");
   const [status, setStatus] = useState("ready");
+  const [statusMessage, setStatusMessage] = useState("");
   const [form, setForm] = useState({
     name: member?.name || "",
     email: member?.email || "",
@@ -735,8 +746,10 @@ const ProfilePage = ({ member, authSession, onMemberChange, onSessionChange }) =
 
   const saveProfile = async (event) => {
     event.preventDefault();
+    setStatusMessage("");
     if (!member?.paid) {
       setStatus("error");
+      setStatusMessage("This email is not marked as a paid member yet.");
       return;
     }
 
@@ -765,14 +778,22 @@ const ProfilePage = ({ member, authSession, onMemberChange, onSessionChange }) =
         profileComplete: true
       });
 
-      const nextMember = await saveMember({
+      const profileMember = {
         ...member,
         ...form,
         paid: true,
         profileComplete: true
-      });
+      };
+      let nextMember = profileMember;
+
+      try {
+        nextMember = await saveMember(profileMember);
+      } catch (airtableError) {
+        console.warn("Airtable profile mirror failed", airtableError);
+      }
 
       const mergedMember = {
+        ...profileMember,
         ...nextMember,
         authUserId: session.user.id,
         hasPassword: true
@@ -780,8 +801,9 @@ const ProfilePage = ({ member, authSession, onMemberChange, onSessionChange }) =
       setStoredMember(mergedMember);
       onMemberChange(mergedMember);
       navigateTo("/calendar");
-    } catch {
+    } catch (error) {
       setStatus("error");
+      setStatusMessage(error instanceof Error ? error.message : "Something did not save correctly.");
     }
   };
 
@@ -801,110 +823,152 @@ const ProfilePage = ({ member, authSession, onMemberChange, onSessionChange }) =
   return (
     <main className="tds-profile-page">
       <form className="tds-profile-card" onSubmit={saveProfile}>
-        <h1>Hi {form.name || "there"}</h1>
-        <h2>Welcome to The Daily Session!</h2>
-        <p>
-          Your daily guide to movement, wellness, and creative classes happening around
-          Philadelphia.
-        </p>
-        <p>No endless searching.<br />No scattered schedules.<br />Just real experiences, happening today.</p>
-        <h3>Please answer a few questions to complete your profile</h3>
-        {status === "verifying" ? <p className="tds-form-note">Verifying Stripe payment...</p> : null}
-        {status === "saving" ? <p className="tds-form-note">Saving your profile...</p> : null}
-        {status === "password-error" ? <p className="tds-form-error">Passwords need to match.</p> : null}
-        {status === "confirm-email" ? <p className="tds-form-note">Account created. Check your email to confirm it, then log in.</p> : null}
-        {status === "error" ? <p className="tds-form-error">Something did not save correctly. Try again in a moment.</p> : null}
-
-        <label>
-          Name
-          <input value={form.name} onChange={(event) => updateField("name", event.target.value)} placeholder="Name" />
-        </label>
-        <label>
-          Pronouns
-          <input value={form.pronouns} onChange={(event) => updateField("pronouns", event.target.value)} placeholder="Pronouns" />
-        </label>
-        <label>
-          Birthday
-          <input type="date" value={form.birthday} onChange={(event) => updateField("birthday", event.target.value)} />
-        </label>
-        <label>
-          Instagram
-          <input value={form.instagram} onChange={(event) => updateField("instagram", event.target.value)} placeholder="@username" />
-        </label>
-        <label>
-          Neighborhood
-          <select value={form.neighborhood} onChange={(event) => updateField("neighborhood", event.target.value)}>
-            <option value="">Neighborhood</option>
-            <option>Center City</option>
-            <option>Fishtown</option>
-            <option>South Philly</option>
-            <option>West Philly</option>
-            <option>Rittenhouse</option>
-          </select>
-        </label>
-        <label>
-          How did you hear about us?
-          <select value={form.heard} onChange={(event) => updateField("heard", event.target.value)}>
-            <option value="">Select one</option>
-            <option>Instagram</option>
-            <option>Friend</option>
-            <option>Studio</option>
-            <option>Search</option>
-          </select>
-        </label>
-        <label>
-          What interests you?
-          <select value={form.interests} onChange={(event) => updateField("interests", event.target.value)}>
-            <option value="">Interests</option>
-            <option>Yoga and pilates</option>
-            <option>Dance and movement</option>
-            <option>Creative arts</option>
-            <option>Fitness</option>
-          </select>
-        </label>
-        <label>
-          Experience Level
-          <select value={form.experience} onChange={(event) => updateField("experience", event.target.value)}>
-            <option value="">Experience</option>
-            <option>Beginner</option>
-            <option>Intermediate</option>
-            <option>Advanced</option>
-            <option>All levels</option>
-          </select>
-        </label>
-        <label>
-          Tell us a little bit about yourself!
-          <textarea value={form.bio} onChange={(event) => updateField("bio", event.target.value)} placeholder="Bio" />
-        </label>
-        {!authSession?.user?.id ? (
-          <div className="tds-profile-passwords">
-            <label>
-              Create Password
-              <input
-                required
-                minLength={8}
-                type="password"
-                value={form.password}
-                onChange={(event) => updateField("password", event.target.value)}
-                placeholder="At least 8 characters"
-              />
-            </label>
-            <label>
-              Confirm Password
-              <input
-                required
-                minLength={8}
-                type="password"
-                value={form.confirmPassword}
-                onChange={(event) => updateField("confirmPassword", event.target.value)}
-                placeholder="Confirm"
-              />
-            </label>
+        <aside className="tds-profile-intro">
+          <BrandLockup />
+          <span className="tds-profile-kicker">Member profile</span>
+          <h1>Hi {form.name || "there"}.</h1>
+          <p>
+            Tell us enough to make your calendar feel personal, then jump straight
+            into the full month of classes.
+          </p>
+          <div className="tds-profile-next">
+            <span>After this</span>
+            <strong>Browse by date, studio, neighborhood, and class type.</strong>
           </div>
-        ) : null}
-        <button type="submit" disabled={!member?.paid || status === "verifying" || status === "saving"}>
-          {status === "verifying" ? "Verifying..." : status === "saving" ? "Saving..." : "Begin Browsing"}
-        </button>
+        </aside>
+
+        <section className="tds-profile-form">
+          <div className="tds-profile-form-head">
+            <span>Welcome to The Daily Session</span>
+            <h2>Set up your member space</h2>
+            <p>No endless searching. No scattered schedules. Just real experiences, happening today.</p>
+          </div>
+
+          <div className="tds-profile-status" aria-live="polite">
+            {status === "verifying" ? <p className="tds-form-note">Verifying Stripe payment...</p> : null}
+            {status === "saving" ? <p className="tds-form-note">Saving your profile...</p> : null}
+            {status === "password-error" ? <p className="tds-form-error">Passwords need to match.</p> : null}
+            {status === "confirm-email" ? <p className="tds-form-note">Account created. Check your email to confirm it, then log in.</p> : null}
+            {status === "error" ? (
+              <p className="tds-form-error">
+                {statusMessage || "Something did not save correctly. Try again in a moment."}
+              </p>
+            ) : null}
+          </div>
+
+          <fieldset className="tds-profile-section">
+            <legend>Basics</legend>
+            <div className="tds-profile-grid">
+              <label>
+                Name
+                <input value={form.name} onChange={(event) => updateField("name", event.target.value)} placeholder="Name" />
+              </label>
+              <label>
+                Pronouns
+                <input value={form.pronouns} onChange={(event) => updateField("pronouns", event.target.value)} placeholder="Pronouns" />
+              </label>
+              <label>
+                Birthday
+                <input type="date" value={form.birthday} onChange={(event) => updateField("birthday", event.target.value)} />
+              </label>
+              <label>
+                Instagram
+                <input value={form.instagram} onChange={(event) => updateField("instagram", event.target.value)} placeholder="@username" />
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset className="tds-profile-section">
+            <legend>Class preferences</legend>
+            <div className="tds-profile-grid">
+              <label>
+                Neighborhood
+                <select value={form.neighborhood} onChange={(event) => updateField("neighborhood", event.target.value)}>
+                  <option value="">Neighborhood</option>
+                  <option>Center City</option>
+                  <option>Fishtown</option>
+                  <option>South Philly</option>
+                  <option>West Philly</option>
+                  <option>Rittenhouse</option>
+                </select>
+              </label>
+              <label>
+                Interests
+                <select value={form.interests} onChange={(event) => updateField("interests", event.target.value)}>
+                  <option value="">Interests</option>
+                  <option>Yoga and pilates</option>
+                  <option>Dance and movement</option>
+                  <option>Creative arts</option>
+                  <option>Fitness</option>
+                </select>
+              </label>
+              <label>
+                Experience Level
+                <select value={form.experience} onChange={(event) => updateField("experience", event.target.value)}>
+                  <option value="">Experience</option>
+                  <option>Beginner</option>
+                  <option>Intermediate</option>
+                  <option>Advanced</option>
+                  <option>All levels</option>
+                </select>
+              </label>
+              <label>
+                How did you hear about us?
+                <select value={form.heard} onChange={(event) => updateField("heard", event.target.value)}>
+                  <option value="">Select one</option>
+                  <option>Instagram</option>
+                  <option>Friend</option>
+                  <option>Studio</option>
+                  <option>Search</option>
+                </select>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset className="tds-profile-section">
+            <legend>About you</legend>
+            <label>
+              Bio
+              <textarea value={form.bio} onChange={(event) => updateField("bio", event.target.value)} placeholder="A little about what you like, what you are trying, or what you want to find more of." />
+            </label>
+          </fieldset>
+
+          {!authSession?.user?.id ? (
+            <fieldset className="tds-profile-section">
+              <legend>Account</legend>
+              <div className="tds-profile-passwords">
+                <label>
+                  Create Password
+                  <input
+                    required
+                    minLength={8}
+                    type="password"
+                    value={form.password}
+                    onChange={(event) => updateField("password", event.target.value)}
+                    placeholder="At least 8 characters"
+                  />
+                </label>
+                <label>
+                  Confirm Password
+                  <input
+                    required
+                    minLength={8}
+                    type="password"
+                    value={form.confirmPassword}
+                    onChange={(event) => updateField("confirmPassword", event.target.value)}
+                    placeholder="Confirm"
+                  />
+                </label>
+              </div>
+            </fieldset>
+          ) : null}
+
+          <div className="tds-profile-actions">
+            <button type="submit" disabled={!member?.paid || status === "verifying" || status === "saving"}>
+              {status === "verifying" ? "Verifying..." : status === "saving" ? "Saving..." : "Begin Browsing"}
+            </button>
+          </div>
+        </section>
       </form>
     </main>
   );
