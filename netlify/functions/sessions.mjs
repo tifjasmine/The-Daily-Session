@@ -1,7 +1,6 @@
 const AIRTABLE_API_URL = "https://api.airtable.com/v0";
 const DEFAULT_BASE_ID = "appQxIhwr00DmKBx5";
 const DEFAULT_TABLE_ID = "tblGTqTTdAlPPVXm0";
-const DEFAULT_VIEW_ID = "viwAMPxJ2RPAIR4oI";
 
 const fieldNames = [
   "Start Time (NEW)",
@@ -78,7 +77,7 @@ export const handler = async () => {
   const token = process.env.AIRTABLE_TOKEN || process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID || DEFAULT_BASE_ID;
   const tableId = process.env.AIRTABLE_TABLE_ID || DEFAULT_TABLE_ID;
-  const viewId = process.env.AIRTABLE_VIEW_ID || DEFAULT_VIEW_ID;
+  const viewId = process.env.AIRTABLE_VIEW_ID || "";
 
   if (!token) {
     return {
@@ -96,10 +95,10 @@ export const handler = async () => {
 
     do {
       const params = new URLSearchParams({
-        pageSize: "100",
-        view: viewId
+        pageSize: "100"
       });
 
+      if (viewId) params.set("view", viewId);
       fieldNames.forEach((field) => params.append("fields[]", field));
       params.append("sort[0][field]", "Start");
       params.append("sort[0][direction]", "asc");
