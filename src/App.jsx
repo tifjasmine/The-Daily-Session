@@ -2,6 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const EASTERN_TZ = "America/New_York";
 const FIXED_STUDIO_COUNT = 51;
+const SUPABASE_URL =
+  import.meta.env.VITE_SUPABASE_URL || "https://zpgvztndfkochixhuvaf.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "sb_publishable_IAjh2tVf_Ejkyh4HYh4KwA_BuQ-KnR1";
+const SUPABASE_SESSION_KEY = "tdsSupabaseSession";
+const MEMBER_STORAGE_KEY = "tdsMember";
 
 const content = {
   headerLabel: "PHILADELPHIA'S MOVEMENT & WELLNESS GUIDE",
@@ -182,17 +188,110 @@ const navigateTo = (path) => {
 
 const getStoredMember = () => {
   try {
-    return JSON.parse(window.localStorage.getItem("tdsMember") || "null");
+    return JSON.parse(window.localStorage.getItem(MEMBER_STORAGE_KEY) || "null");
   } catch {
     return null;
   }
 };
 
 const setStoredMember = (member) => {
-  window.localStorage.setItem("tdsMember", JSON.stringify(member));
+  window.localStorage.setItem(MEMBER_STORAGE_KEY, JSON.stringify(member));
 };
 
-const fetchMemberByEmail = async (email) => {
+const clearStoredMember = () => {
+  window.localStorage.removeItem(MEMBER_STORAGE_KEY);
+};
+
+const getStoredSupabaseSession = () => {
+  try {
+    return JSON.parse(window.localStorage.getItem(SUPABASE_SESSION_KEY) || "null");
+  } catch {
+    return null;
+  }
+};
+
+const setStoredSupabaseSession = (session) => {
+  window.localStorage.setItem(SUPABASE_SESSION_KEY, JSON.stringify(session));
+};
+
+const clearStoredSupabaseSession = () => {
+  window.localStorage.removeItem(SUPABASE_SESSION_KEY);
+};
+
+const normalizeAuthPayload = (payload) => {
+  if (!payload?.access_token) return null;
+
+  return {
+    accessToken: payload.access_token,
+    refreshToken: payload.refresh_token,
+    expiresAt: payload.expires_at || Math.floor(Date.now() / 1000) + (payload.expires_in || 3600),
+    user: payload.user || null
+  };
+};
+
+const supabaseAuthRequest = async (path, body, token) => {
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/${path}`, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      authorization: `Bearer ${token || SUPABASE_PUBLISHABLE_KEY}`,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error_description || payload.msg || payload.message || "Supabase auth failed");
+  return payload;
+};
+
+const signInWithPassword = async (email, password) => {
+  const payload = await supabaseAuthRequest("token?grant_type=password", {
+    email: String(email || "").trim().toLowerCase(),
+    password
+  });
+  const session = normalizeAuthPayload(payload);
+  if (!session) throw new Error("Could not create a Supabase session.");
+  setStoredSupabaseSession(session);
+  return session;
+};
+
+const signUpWithPassword = async (email, password) => {
+  const payload = await supabaseAuthRequest("signup", {
+    email: String(email || "").trim().toLowerCase(),
+    password
+  });
+  const session = normalizeAuthPayload(payload);
+  if (session) setStoredSupabaseSession(session);
+  return { session, user: payload.user || session?.user || null };
+};
+
+const refreshSupabaseSession = async (session) => {
+  if (!session?.refreshToken) return null;
+  if (session.expiresAt && session.expiresAt - 60 > Math.floor(Date.now() / 1000)) return session;
+
+  const payload = await supabaseAuthRequest("token?grant_type=refresh_token", {
+    refresh_token: session.refreshToken
+  });
+  const refreshed = normalizeAuthPayload(payload);
+  if (refreshed) setStoredSupabaseSession(refreshed);
+  return refreshed;
+};
+
+const signOut = async (session) => {
+  if (session?.accessToken) {
+    await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_PUBLISHABLE_KEY,
+        authorization: `Bearer ${session.accessToken}`
+      }
+    }).catch(() => {});
+  }
+  clearStoredSupabaseSession();
+  clearStoredMember();
+};
+
+const fetchAirtableMember = async (email) => {
   const response = await fetch(`/api/member?email=${encodeURIComponent(email)}`);
   const payload = await response.json();
   if (!response.ok) throw new Error(payload.error || "Member lookup failed");
@@ -210,6 +309,90 @@ const saveMember = async (member) => {
   return payload.member;
 };
 
+const supabaseProfileRequest = async (session, path, options = {}) => {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      authorization: `Bearer ${session.accessToken}`,
+      "content-type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+
+  if (response.status === 204) return null;
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(payload?.message || "Supabase profile request failed");
+  return payload;
+};
+
+const getSupabaseProfile = async (session) => {
+  if (!session?.user?.id) return null;
+  const rows = await supabaseProfileRequest(
+    session,
+    `member_profiles?select=*&id=eq.${encodeURIComponent(session.user.id)}`
+  );
+  return rows?.[0] || null;
+};
+
+const saveSupabaseProfile = async (session, profile) => {
+  const row = {
+    id: session.user.id,
+    email: session.user.email || profile.email,
+    name: profile.name || "",
+    pronouns: profile.pronouns || "",
+    birthday: profile.birthday || null,
+    instagram: profile.instagram || "",
+    neighborhood: profile.neighborhood || "",
+    heard: profile.heard || "",
+    interests: profile.interests || "",
+    experience: profile.experience || "",
+    bio: profile.bio || "",
+    profile_complete: Boolean(profile.profileComplete),
+    updated_at: new Date().toISOString()
+  };
+
+  const rows = await supabaseProfileRequest(session, "member_profiles?on_conflict=id", {
+    method: "POST",
+    headers: { prefer: "resolution=merge-duplicates,return=representation" },
+    body: JSON.stringify(row)
+  });
+  return rows?.[0] || row;
+};
+
+const profileToMember = (profile) => ({
+  userId: profile?.id || "",
+  email: profile?.email || "",
+  name: profile?.name || "",
+  pronouns: profile?.pronouns || "",
+  birthday: profile?.birthday || "",
+  instagram: profile?.instagram || "",
+  neighborhood: profile?.neighborhood || "",
+  heard: profile?.heard || "",
+  interests: profile?.interests || "",
+  experience: profile?.experience || "",
+  bio: profile?.bio || "",
+  profileComplete: Boolean(profile?.profile_complete)
+});
+
+const loadAuthenticatedMember = async (session) => {
+  const email = session?.user?.email || "";
+  if (!email) return null;
+
+  const [airtableMember, supabaseProfile] = await Promise.all([
+    fetchAirtableMember(email).catch(() => null),
+    getSupabaseProfile(session).catch(() => null)
+  ]);
+
+  return {
+    ...(airtableMember || {}),
+    ...profileToMember(supabaseProfile),
+    email,
+    paid: Boolean(airtableMember?.paid),
+    authUserId: session.user.id
+  };
+};
+
 const HeaderLogo = () => (
   <button type="button" className="tds-nav-logo" onClick={() => navigateTo("/")}>
     <MiniCalendarLogo />
@@ -217,7 +400,7 @@ const HeaderLogo = () => (
   </button>
 );
 
-const AppNav = ({ member }) => (
+const AppNav = ({ member, onLogout }) => (
   <nav className="tds-nav" aria-label="Main navigation">
     <HeaderLogo />
     <div>
@@ -228,9 +411,14 @@ const AppNav = ({ member }) => (
         Calendar
       </button>
       {member ? (
-        <button type="button" onClick={() => navigateTo("/profile")}>
-          Profile
-        </button>
+        <>
+          <button type="button" onClick={() => navigateTo("/profile")}>
+            Profile
+          </button>
+          <button type="button" onClick={onLogout}>
+            Log Out
+          </button>
+        </>
       ) : (
         <>
           <button type="button" onClick={() => navigateTo("/login")}>
@@ -256,8 +444,9 @@ const AuthShell = ({ title, eyebrow, children }) => (
   </main>
 );
 
-const LoginPage = ({ onMemberChange }) => {
+const LoginPage = ({ onMemberChange, onSessionChange }) => {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -266,26 +455,24 @@ const LoginPage = ({ onMemberChange }) => {
     setIsLoading(true);
     setMessage("");
 
-    const member = getStoredMember();
-
-    if (member?.paid && (!email || member.email === email)) {
-      onMemberChange(member);
-      navigateTo(member.profileComplete ? "/calendar" : "/profile");
-      return;
-    }
-
     try {
-      const airtableMember = await fetchMemberByEmail(email);
-      if (airtableMember?.paid) {
-        setStoredMember(airtableMember);
-        onMemberChange(airtableMember);
-        navigateTo(airtableMember.profileComplete ? "/calendar" : "/profile");
+      const session = await signInWithPassword(email, password);
+      const authenticatedMember = await loadAuthenticatedMember(session);
+
+      if (authenticatedMember?.paid) {
+        setStoredMember(authenticatedMember);
+        onSessionChange(session);
+        onMemberChange(authenticatedMember);
+        navigateTo(authenticatedMember.profileComplete ? "/calendar" : "/profile");
         return;
       }
 
-      setMessage("No active membership found for that email yet.");
-    } catch {
-      setMessage("Could not check members right now. Try again in a moment.");
+      await signOut(session);
+      onSessionChange(null);
+      onMemberChange(null);
+      setMessage("That login works, but this email is not marked as a paid member yet.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not log in right now.");
     } finally {
       setIsLoading(false);
     }
@@ -304,13 +491,124 @@ const LoginPage = ({ onMemberChange }) => {
             placeholder="you@example.com"
           />
         </label>
+        <label>
+          Password
+          <input
+            required
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Password"
+          />
+        </label>
         {message ? <p className="tds-form-note">{message}</p> : null}
         <button type="submit" disabled={isLoading}>
           {isLoading ? "Checking..." : "Continue"}
         </button>
       </form>
+      <button type="button" className="tds-link-button" onClick={() => navigateTo("/create-account")}>
+        Already approved? Create your password
+      </button>
       <button type="button" className="tds-link-button" onClick={() => navigateTo("/signup")}>
         Need a membership? Sign up
+      </button>
+    </AuthShell>
+  );
+};
+
+const CreateAccountPage = ({ onMemberChange, onSessionChange }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const onSubmit = async (event) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setMessage("");
+
+    if (password !== confirmPassword) {
+      setMessage("Passwords need to match.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const airtableMember = await fetchAirtableMember(email);
+      if (!airtableMember?.paid) {
+        setMessage("This email is not marked as an active member yet.");
+        return;
+      }
+
+      const { session } = await signUpWithPassword(email, password);
+      if (!session) {
+        setMessage("Account created. Check your email to confirm it, then come back and log in.");
+        return;
+      }
+
+      const nextMember = {
+        ...airtableMember,
+        email: session.user.email || email,
+        authUserId: session.user.id
+      };
+      await saveSupabaseProfile(session, nextMember);
+      setStoredMember(nextMember);
+      onSessionChange(session);
+      onMemberChange(nextMember);
+      navigateTo(nextMember.profileComplete ? "/calendar" : "/profile");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not create the account right now.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <AuthShell title="Create your member password" eyebrow="Members">
+      <p className="tds-auth-copy">
+        Use this if you were added manually in Airtable or already paid through Stripe.
+      </p>
+      <form className="tds-auth-form" onSubmit={onSubmit}>
+        <label>
+          Email
+          <input
+            required
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
+          />
+        </label>
+        <label>
+          Password
+          <input
+            required
+            minLength={8}
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="At least 8 characters"
+          />
+        </label>
+        <label>
+          Confirm Password
+          <input
+            required
+            minLength={8}
+            type="password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            placeholder="Confirm password"
+          />
+        </label>
+        {message ? <p className="tds-form-note">{message}</p> : null}
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Creating..." : "Create Account"}
+        </button>
+      </form>
+      <button type="button" className="tds-link-button" onClick={() => navigateTo("/login")}>
+        Already have a password? Log in
       </button>
     </AuthShell>
   );
@@ -388,7 +686,7 @@ const SignupPage = () => {
   );
 };
 
-const ProfilePage = ({ member, onMemberChange }) => {
+const ProfilePage = ({ member, authSession, onMemberChange, onSessionChange }) => {
   const hasCheckoutSession = new URLSearchParams(window.location.search).has("session_id");
   const [status, setStatus] = useState("ready");
   const [form, setForm] = useState({
@@ -401,7 +699,9 @@ const ProfilePage = ({ member, onMemberChange }) => {
     heard: member?.heard || "",
     interests: member?.interests || "",
     experience: member?.experience || "",
-    bio: member?.bio || ""
+    bio: member?.bio || "",
+    password: "",
+    confirmPassword: ""
   });
 
   useEffect(() => {
@@ -441,16 +741,44 @@ const ProfilePage = ({ member, onMemberChange }) => {
     }
 
     setStatus("saving");
+    const needsAccount = !authSession?.user?.id;
+    if (needsAccount && form.password !== form.confirmPassword) {
+      setStatus("password-error");
+      return;
+    }
 
     try {
+      let session = authSession;
+      if (needsAccount) {
+        const created = await signUpWithPassword(form.email, form.password);
+        session = created.session;
+        if (!session) {
+          setStatus("confirm-email");
+          return;
+        }
+        onSessionChange(session);
+      }
+
+      await saveSupabaseProfile(session, {
+        ...member,
+        ...form,
+        profileComplete: true
+      });
+
       const nextMember = await saveMember({
         ...member,
         ...form,
         paid: true,
         profileComplete: true
       });
-      setStoredMember(nextMember);
-      onMemberChange(nextMember);
+
+      const mergedMember = {
+        ...nextMember,
+        authUserId: session.user.id,
+        hasPassword: true
+      };
+      setStoredMember(mergedMember);
+      onMemberChange(mergedMember);
       navigateTo("/calendar");
     } catch {
       setStatus("error");
@@ -483,6 +811,8 @@ const ProfilePage = ({ member, onMemberChange }) => {
         <h3>Please answer a few questions to complete your profile</h3>
         {status === "verifying" ? <p className="tds-form-note">Verifying Stripe payment...</p> : null}
         {status === "saving" ? <p className="tds-form-note">Saving your profile...</p> : null}
+        {status === "password-error" ? <p className="tds-form-error">Passwords need to match.</p> : null}
+        {status === "confirm-email" ? <p className="tds-form-note">Account created. Check your email to confirm it, then log in.</p> : null}
         {status === "error" ? <p className="tds-form-error">Something did not save correctly. Try again in a moment.</p> : null}
 
         <label>
@@ -546,6 +876,32 @@ const ProfilePage = ({ member, onMemberChange }) => {
           Tell us a little bit about yourself!
           <textarea value={form.bio} onChange={(event) => updateField("bio", event.target.value)} placeholder="Bio" />
         </label>
+        {!authSession?.user?.id ? (
+          <div className="tds-profile-passwords">
+            <label>
+              Create Password
+              <input
+                required
+                minLength={8}
+                type="password"
+                value={form.password}
+                onChange={(event) => updateField("password", event.target.value)}
+                placeholder="At least 8 characters"
+              />
+            </label>
+            <label>
+              Confirm Password
+              <input
+                required
+                minLength={8}
+                type="password"
+                value={form.confirmPassword}
+                onChange={(event) => updateField("confirmPassword", event.target.value)}
+                placeholder="Confirm"
+              />
+            </label>
+          </div>
+        ) : null}
         <button type="submit" disabled={!member?.paid || status === "verifying" || status === "saving"}>
           {status === "verifying" ? "Verifying..." : status === "saving" ? "Saving..." : "Begin Browsing"}
         </button>
@@ -554,71 +910,108 @@ const ProfilePage = ({ member, onMemberChange }) => {
   );
 };
 
-const PageHeader = () => (
+const getMonthMatrix = (date) => {
+  const first = new Date(date.getFullYear(), date.getMonth(), 1);
+  const start = new Date(first);
+  start.setDate(first.getDate() - first.getDay());
+
+  return Array.from({ length: 42 }, (_, index) => {
+    const day = new Date(start);
+    day.setDate(start.getDate() + index);
+    return day;
+  });
+};
+
+const CalendarHero = () => (
   <section className="tds-page-header-shell">
     <div className="tds-page-header-card">
       <div>
         <BrandLockup />
         <span className="tds-page-header-kicker">Monthly Calendar</span>
-        <h1>Explore what's happening this month.</h1>
+        <h1>
+          Explore what's <em>happening</em> this month.
+        </h1>
         <p>
           Browse classes across Philadelphia by category, studio, neighborhood, level,
-          and price, all in one place.
+          and price - all in one place.
         </p>
       </div>
       <aside>
         <span>Inside this page</span>
         <h2>Find your next class faster</h2>
-        <p>Use the filters to narrow your options, then browse the month your way.</p>
+        <p>Use filters to narrow options, then switch between grid and list views.</p>
+        <div className="tds-page-badges">
+          <small>Monthly view</small>
+          <small>Philadelphia</small>
+          <small>Updated daily</small>
+        </div>
       </aside>
     </div>
   </section>
 );
 
-const CalendarPage = ({ member, activeSessions }) => {
+const CalendarPage = ({ member, authSession, activeSessions, onLogout }) => {
   const [category, setCategory] = useState("all");
+  const [studio, setStudio] = useState("all");
+  const [neighborhood, setNeighborhood] = useState("all");
   const [query, setQuery] = useState("");
+  const [viewMode, setViewMode] = useState("grid");
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
+  const [selectedDateKey, setSelectedDateKey] = useState(() => getEasternDateKey(new Date()));
   const [selectedSession, setSelectedSession] = useState(null);
 
-  if (!member?.paid) {
+  if (!member?.paid || !authSession?.user?.id) {
     return (
       <AuthShell title="Members only calendar" eyebrow="Locked">
         <p className="tds-auth-copy">
-          Purchase a membership to unlock the full monthly calendar.
+          Log in with your member password to unlock the full monthly calendar.
         </p>
         <button type="button" className="tds-auth-main-button" onClick={() => navigateTo("/signup")}>
           Join to View Calendar
+        </button>
+        <button type="button" className="tds-link-button" onClick={() => navigateTo("/login")}>
+          Already joined? Log in
         </button>
       </AuthShell>
     );
   }
 
   const categories = ["all", ...Array.from(new Set(activeSessions.map((session) => session.category))).sort()];
+  const studios = ["all", ...Array.from(new Set(activeSessions.map((session) => session.studio))).sort()];
+  const neighborhoods = [
+    "all",
+    ...Array.from(new Set(activeSessions.map((session) => session.neighborhood).filter(Boolean))).sort()
+  ];
   const filtered = activeSessions
     .filter((session) => category === "all" || session.category === category)
+    .filter((session) => studio === "all" || session.studio === studio)
+    .filter((session) => neighborhood === "all" || session.neighborhood === neighborhood)
     .filter((session) => {
       const haystack = `${session.title} ${session.studio} ${session.neighborhood}`.toLowerCase();
       return haystack.includes(query.toLowerCase());
     })
     .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 
-  const grouped = filtered.reduce((acc, session) => {
-    const key = formatEasternHeaderDate(session.startDate);
+  const monthDays = getMonthMatrix(calendarMonth);
+  const monthLabel = calendarMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const sessionsByDay = filtered.reduce((acc, session) => {
+    const key = getEasternDateKey(session.startDate);
     if (!acc.has(key)) acc.set(key, []);
     acc.get(key).push(session);
     return acc;
   }, new Map());
+  const selectedItems = sessionsByDay.get(selectedDateKey) || [];
+  const selectedDate = new Date(`${selectedDateKey}T12:00:00`);
+
+  const shiftMonth = (amount) => {
+    setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() + amount, 1));
+  };
 
   return (
     <main className="tds-calendar-page">
-      <AppNav member={member} />
-      <PageHeader />
+      <AppNav member={member} onLogout={onLogout} />
+      <CalendarHero />
       <section className="tds-calendar-tools">
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search classes, studios, neighborhoods"
-        />
         <select value={category} onChange={(event) => setCategory(event.target.value)}>
           {categories.map((cat) => (
             <option key={cat} value={cat}>
@@ -626,33 +1019,121 @@ const CalendarPage = ({ member, activeSessions }) => {
             </option>
           ))}
         </select>
+        <select value={studio} onChange={(event) => setStudio(event.target.value)}>
+          {studios.map((item) => (
+            <option key={item} value={item}>
+              {item === "all" ? "All Studios" : item}
+            </option>
+          ))}
+        </select>
+        <select value={neighborhood} onChange={(event) => setNeighborhood(event.target.value)}>
+          {neighborhoods.map((item) => (
+            <option key={item} value={item}>
+              {item === "all" ? "All Neighborhoods" : item}
+            </option>
+          ))}
+        </select>
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search classes"
+        />
+        <span>{filtered.length} classes found</span>
+        <div className="tds-view-toggle" aria-label="Calendar view">
+          <button type="button" className={viewMode === "grid" ? "is-active" : ""} onClick={() => setViewMode("grid")}>
+            Grid
+          </button>
+          <button type="button" className={viewMode === "list" ? "is-active" : ""} onClick={() => setViewMode("list")}>
+            List
+          </button>
+        </div>
       </section>
-      <section className="tds-calendar-list">
-        {Array.from(grouped.entries()).map(([date, items]) => (
-          <div className="tds-calendar-day" key={date}>
-            <div className="tds-calendar-day-head">
-              <h2>{date}</h2>
-              <span>{items.length} classes</span>
+
+      <section className={`tds-calendar-board ${viewMode === "list" ? "is-list" : ""}`}>
+        <div className="tds-month-panel">
+          <div className="tds-month-head">
+            <div>
+              <h2>{monthLabel}</h2>
+              <p>{filtered.length} matching classes this month</p>
             </div>
-            <div className="tds-calendar-grid">
-              {items.map((session) => (
-                <article className="tds-calendar-card" key={session.id}>
+            <div>
+              <button type="button" onClick={() => shiftMonth(-1)}>‹</button>
+              <button type="button" onClick={() => setCalendarMonth(new Date())}>Today</button>
+              <button type="button" onClick={() => shiftMonth(1)}>›</button>
+            </div>
+          </div>
+          <div className="tds-month-weekdays">
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+              <span key={day}>{day}</span>
+            ))}
+          </div>
+          <div className="tds-month-grid">
+            {monthDays.map((day) => {
+              const key = getEasternDateKey(day);
+              const items = sessionsByDay.get(key) || [];
+              const isCurrentMonth = day.getMonth() === calendarMonth.getMonth();
+              const isSelected = key === selectedDateKey;
+
+              return (
+                <button
+                  type="button"
+                  className={`${isSelected ? "is-selected" : ""} ${!isCurrentMonth ? "is-muted" : ""}`}
+                  key={key}
+                  onClick={() => setSelectedDateKey(key)}
+                >
+                  <span>{day.getDate()}</span>
+                  {items.length ? <strong>{items.length}</strong> : null}
+                  <div>
+                    {items.slice(0, 7).map((session) => (
+                      <i key={session.id} style={{ background: getCategoryPillStyle(session.category).color }} />
+                    ))}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <aside className="tds-day-panel">
+          <div className="tds-day-head">
+            <div>
+              <h2>{formatEasternHeaderDate(selectedDate)}</h2>
+              <p>{selectedItems.length} classes</p>
+            </div>
+          </div>
+          {selectedItems.length === 0 ? (
+            <div className="tds-empty-state">
+              <strong>No classes on this date</strong>
+              <span>Try a nearby day or loosen the filters.</span>
+            </div>
+          ) : (
+            <div className="tds-day-list">
+              {selectedItems.map((session) => (
+                <article className="tds-day-card" key={session.id}>
                   {session.photo ? <img src={session.photo} alt="" /> : null}
                   <div>
-                    <span>{formatEasternTime(session.startDate)}</span>
+                    <span>{session.category}</span>
                     <h3>{session.title}</h3>
                     <p>{session.studio}</p>
-                    <small>{session.category}{session.neighborhood ? ` · ${session.neighborhood}` : ""}</small>
+                    <small>{formatEasternTime(session.startDate)}{session.neighborhood ? ` · ${session.neighborhood}` : ""}</small>
                   </div>
-                  <button type="button" onClick={() => setSelectedSession(session)}>
-                    Details
-                  </button>
+                  <div>
+                    <button type="button" onClick={() => setSelectedSession(session)}>
+                      View Details
+                    </button>
+                    {session.studioSite ? (
+                      <a href={session.studioSite} target="_blank" rel="noreferrer">
+                        Sign Up
+                      </a>
+                    ) : null}
+                  </div>
                 </article>
               ))}
             </div>
-          </div>
-        ))}
+          )}
+        </aside>
       </section>
+
       {selectedSession ? (
         <div className="tds-modal-backdrop" onClick={() => setSelectedSession(null)}>
           <div className="tds-modal" onClick={(event) => event.stopPropagation()}>
@@ -929,6 +1410,7 @@ const ScheduleSection = ({ now, activeSessions, dataStatus }) => {
 export default function App() {
   const [path, setPath] = useState(() => window.location.pathname);
   const [member, setMember] = useState(() => getStoredMember());
+  const [authSession, setAuthSession] = useState(() => getStoredSupabaseSession());
   const [now, setNow] = useState(() => floorToMinute(new Date()));
   const [sessions, setSessions] = useState([]);
   const [dataStatus, setDataStatus] = useState({
@@ -951,12 +1433,48 @@ export default function App() {
     const onPopState = () => {
       setPath(window.location.pathname);
       setMember(getStoredMember());
+      setAuthSession(getStoredSupabaseSession());
     };
 
     window.addEventListener("popstate", onPopState);
 
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const storedSession = getStoredSupabaseSession();
+    if (!storedSession) return undefined;
+
+    refreshSupabaseSession(storedSession)
+      .then(async (session) => {
+        if (!session || !isMounted) return;
+        setAuthSession(session);
+        const authenticatedMember = await loadAuthenticatedMember(session);
+        if (!isMounted || !authenticatedMember) return;
+        setStoredMember(authenticatedMember);
+        setMember(authenticatedMember);
+      })
+      .catch(() => {
+        clearStoredSupabaseSession();
+        clearStoredMember();
+        if (isMounted) {
+          setAuthSession(null);
+          setMember(null);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut(authSession);
+    setAuthSession(null);
+    setMember(null);
+    navigateTo("/");
+  };
 
   useEffect(() => {
     const syncToMinute = () => setNow(floorToMinute(new Date()));
@@ -1081,24 +1599,42 @@ export default function App() {
   const headingParts = content.mainHeading.split(" ");
 
   if (path === "/login") {
-    return <LoginPage onMemberChange={setMember} />;
+    return <LoginPage onMemberChange={setMember} onSessionChange={setAuthSession} />;
   }
 
   if (path === "/signup") {
     return <SignupPage />;
   }
 
+  if (path === "/create-account") {
+    return <CreateAccountPage onMemberChange={setMember} onSessionChange={setAuthSession} />;
+  }
+
   if (path === "/profile") {
-    return <ProfilePage member={member} onMemberChange={setMember} />;
+    return (
+      <ProfilePage
+        member={member}
+        authSession={authSession}
+        onMemberChange={setMember}
+        onSessionChange={setAuthSession}
+      />
+    );
   }
 
   if (path === "/calendar") {
-    return <CalendarPage member={member} activeSessions={activeSessions} />;
+    return (
+      <CalendarPage
+        member={member}
+        authSession={authSession}
+        activeSessions={activeSessions}
+        onLogout={handleLogout}
+      />
+    );
   }
 
   return (
     <main className="tds-page">
-      <AppNav member={member} />
+      <AppNav member={member} onLogout={handleLogout} />
       <section className="tds-hero" aria-labelledby="tds-heading">
         <div className="tds-copy">
           <BrandLockup />

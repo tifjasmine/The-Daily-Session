@@ -45,9 +45,24 @@ Set these Netlify environment variables:
 
 After a successful checkout, Stripe returns members to `/profile`, where payment is verified before the profile form unlocks the calendar.
 
+## Supabase Auth
+
+Member passwords and login sessions are handled by Supabase Auth.
+
+The site is connected to:
+
+- `VITE_SUPABASE_URL=https://zpgvztndfkochixhuvaf.supabase.co`
+- `VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_IAjh2tVf_Ejkyh4HYh4KwA_BuQ-KnR1`
+
+Those values are safe to expose in the browser, but you can also add them in Netlify as environment variables.
+
+The Supabase table `public.member_profiles` stores profile fields. Row Level Security is enabled so each authenticated member can only read and edit their own profile.
+
+If Supabase email confirmation is enabled, new users may need to confirm their email before their first login. For launch testing, you can disable email confirmation in Supabase Auth provider settings.
+
 ## Airtable Members
 
-Manual members and profile data are read/written through `/api/member`.
+Airtable still acts as the admin-editable paid member list and profile mirror through `/api/member`.
 
 Create a table named `Members`, or set:
 
@@ -71,7 +86,7 @@ Recommended member fields:
 - `Stripe Customer ID`
 - `Stripe Subscription ID`
 
-To manually add a member, create a record with `Email` and check `Paid`.
+To manually add a member, create a record with `Email` and check `Paid`. Then the member can use `/create-account` to create their secure Supabase password.
 
 ## Updating Session Data
 

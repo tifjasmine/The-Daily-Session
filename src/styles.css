@@ -832,14 +832,20 @@ h1 em {
   line-height: 1.55;
 }
 
+.tds-profile-passwords {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
 .tds-calendar-page {
   min-height: 100vh;
-  background: #f0e7db;
+  background: #5a260d;
   color: #5d2b12;
 }
 
 .tds-page-header-shell {
-  background: linear-gradient(135deg, #3d2314 0%, #5a2d12 48%, #7a3208 100%);
+  background: linear-gradient(135deg, #4b2414 0%, #6d310f 55%, #88441f 100%);
   padding: 24px;
 }
 
@@ -847,21 +853,25 @@ h1 em {
   width: min(1180px, 100%);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+  grid-template-columns: 1fr;
   gap: 24px;
-  align-items: center;
-  border: 1px solid rgba(245, 232, 216, 0.12);
+  border: 1px solid rgba(245, 232, 216, 0.16);
   border-radius: 18px;
   background: rgba(245, 232, 216, 0.08);
-  padding: 24px;
+  padding: 28px;
 }
 
 .tds-page-header-card h1 {
-  margin: 14px 0;
+  max-width: 860px;
+  margin: 18px 0;
   color: #f5e8d8;
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(2.2rem, 5vw, 3.4rem);
   line-height: 1.05;
+}
+
+.tds-page-header-card h1 em {
+  color: #f0a56e;
 }
 
 .tds-page-header-card p {
@@ -885,9 +895,9 @@ h1 em {
 }
 
 .tds-page-header-card aside {
-  border-radius: 14px;
+  border-radius: 16px;
   background: rgba(245, 232, 216, 0.92);
-  padding: 20px;
+  padding: 22px;
 }
 
 .tds-page-header-card aside span {
@@ -909,98 +919,264 @@ h1 em {
   color: #9a7060;
 }
 
+.tds-page-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.tds-page-badges small {
+  border-radius: 999px;
+  background: #fffdf9;
+  color: #4b2414;
+  padding: 10px 14px;
+  font-weight: 900;
+}
+
 .tds-calendar-tools {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
-  gap: 12px;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 14px;
+  align-items: center;
   width: min(1180px, 100%);
   margin: 0 auto;
-  padding: 24px;
+  padding: 24px 24px 28px;
+  color: #f4dfcf;
 }
 
-.tds-calendar-list {
-  width: min(1180px, 100%);
-  margin: 0 auto;
-  padding: 0 24px 64px;
+.tds-calendar-tools span {
+  color: #ead7c8;
+  font-weight: 700;
 }
 
-.tds-calendar-day {
-  margin-bottom: 28px;
+.tds-calendar-tools .tds-view-toggle {
+  justify-self: end;
 }
 
-.tds-calendar-day-head {
+.tds-view-toggle {
   display: flex;
+  border: 1px solid rgba(245, 232, 216, 0.18);
+  border-radius: 14px;
+  background: rgba(245, 232, 216, 0.12);
+  padding: 5px;
+}
+
+.tds-view-toggle button {
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #f5e8d8;
+  cursor: pointer;
+  min-height: 38px;
+  padding: 8px 18px;
+  font-weight: 900;
+}
+
+.tds-view-toggle button.is-active {
+  background: #f5e8d8;
+  color: #4b2414;
+}
+
+.tds-calendar-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+  width: 100%;
+  background: #f0e7db;
+}
+
+.tds-month-panel,
+.tds-day-panel {
+  min-width: 0;
+  padding: 32px;
+}
+
+.tds-month-panel {
+  border-right: 1px solid rgba(93, 43, 18, 0.1);
+}
+
+.tds-month-head,
+.tds-day-head {
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  border-bottom: 1px solid rgba(93, 43, 18, 0.12);
-  margin-bottom: 12px;
-  padding-bottom: 10px;
+  gap: 18px;
+  margin-bottom: 24px;
+  display: flex;
 }
 
-.tds-calendar-day-head h2 {
+.tds-month-head h2,
+.tds-day-head h2 {
   margin: 0;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.5rem;
+  font-size: 2rem;
 }
 
-.tds-calendar-day-head span {
+.tds-month-head p,
+.tds-day-head p {
+  margin: 6px 0 0;
   color: #9a7060;
-  font-size: 0.9rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
-.tds-calendar-grid {
+.tds-month-head div:last-child {
+  display: flex;
+  gap: 8px;
+}
+
+.tds-month-head button {
+  min-height: 42px;
+  border: 1px solid #decfc1;
+  border-radius: 10px;
+  background: #fffdf9;
+  color: #4b2414;
+  cursor: pointer;
+  padding: 8px 14px;
+  font-weight: 900;
+}
+
+.tds-month-weekdays {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tds-month-weekdays span {
+  color: #a6745e;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.tds-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tds-month-grid button {
+  min-width: 0;
+  min-height: 94px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: #fffdf9;
+  color: #5d2b12;
+  cursor: pointer;
+  padding: 10px;
+  text-align: left;
+}
+
+.tds-month-grid button.is-selected {
+  background: #6b2d10;
+  color: #fff7ef;
+}
+
+.tds-month-grid button.is-muted {
+  opacity: 0.42;
+}
+
+.tds-month-grid strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.82rem;
+}
+
+.tds-month-grid div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.tds-month-grid i {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+}
+
+.tds-day-list {
+  display: grid;
   gap: 12px;
 }
 
-.tds-calendar-card {
+.tds-day-card {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-columns: 82px minmax(0, 1fr) 132px;
+  align-items: center;
   gap: 12px;
-  border: 1px solid rgba(93, 43, 18, 0.12);
+  border-bottom: 1px solid rgba(93, 43, 18, 0.1);
   border-radius: 8px;
   background: #fffdf9;
-  padding: 12px;
+  padding: 14px;
 }
 
-.tds-calendar-card img {
-  width: 72px;
-  height: 72px;
+.tds-day-card img {
+  width: 82px;
+  height: 82px;
   border-radius: 8px;
   object-fit: cover;
 }
 
-.tds-calendar-card span {
+.tds-day-card span {
   color: #c4572a;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   font-size: 0.78rem;
   font-weight: 800;
 }
 
-.tds-calendar-card h3 {
+.tds-day-card h3 {
   margin: 4px 0;
   color: #3d2314;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 1.2rem;
 }
 
-.tds-calendar-card p,
-.tds-calendar-card small {
+.tds-day-card p,
+.tds-day-card small {
   margin: 0;
   color: #8e6c58;
 }
 
-.tds-calendar-card button {
-  grid-column: 1 / -1;
+.tds-day-card > div:last-child {
+  display: grid;
+  gap: 8px;
+}
+
+.tds-day-card button,
+.tds-day-card a {
   min-height: 40px;
   border: 0;
   border-radius: 8px;
+  text-align: center;
+  text-decoration: none;
+  padding: 10px;
+  font-weight: 800;
+}
+
+.tds-day-card button {
   background: #3d2314;
   color: #f5e8d8;
   cursor: pointer;
-  font-weight: 800;
+}
+
+.tds-day-card a {
+  background: #f1e2d2;
+  color: #4b2414;
+}
+
+.tds-calendar-board.is-list {
+  grid-template-columns: 1fr;
+}
+
+.tds-calendar-board.is-list .tds-month-panel {
+  display: none;
+}
+
+.tds-calendar-board.is-list .tds-day-panel {
+  width: min(980px, 100%);
+  margin: 0 auto;
 }
 
 @media (max-width: 860px) {
@@ -1022,8 +1198,30 @@ h1 em {
   }
 
   .tds-page-header-card,
-  .tds-calendar-tools {
+  .tds-calendar-tools,
+  .tds-calendar-board {
     grid-template-columns: 1fr;
+  }
+
+  .tds-calendar-tools .tds-view-toggle {
+    justify-self: stretch;
+  }
+
+  .tds-view-toggle button {
+    flex: 1;
+  }
+
+  .tds-month-panel {
+    border-right: 0;
+  }
+
+  .tds-day-card {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .tds-day-card > div:last-child {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr 1fr;
   }
 
   .tds-schedule {
@@ -1113,8 +1311,31 @@ h1 em {
     padding: 28px;
   }
 
+  .tds-profile-passwords {
+    grid-template-columns: 1fr;
+  }
+
   .tds-stat-value {
     font-size: 48px;
+  }
+
+  .tds-page-header-shell,
+  .tds-month-panel,
+  .tds-day-panel {
+    padding: 20px;
+  }
+
+  .tds-calendar-tools {
+    padding: 20px;
+  }
+
+  .tds-month-grid {
+    gap: 5px;
+  }
+
+  .tds-month-grid button {
+    min-height: 78px;
+    padding: 7px;
   }
 
   .tds-schedule {
