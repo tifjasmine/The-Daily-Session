@@ -18,9 +18,23 @@ Use these Netlify settings:
 
 The same settings are also saved in `netlify.toml`.
 
+## Airtable Data
+
+The deployed site reads session data from the Netlify function at `/api/sessions`.
+
+Set this required Netlify environment variable:
+
+- `AIRTABLE_TOKEN`
+
+Optional overrides are already defaulted to the current base/table/view:
+
+- `AIRTABLE_BASE_ID=appQxIhwr00DmKBx5`
+- `AIRTABLE_TABLE_ID=tblGTqTTdAlPPVXm0`
+- `AIRTABLE_VIEW_ID=viwAMPxJ2RPAIR4oI`
+
 ## Updating Session Data
 
-For now, class/session records live in `src/data/sessions.json`.
+For local fallback, class/session records live in `src/data/sessions.json`.
 
 Each record uses this shape:
 
@@ -40,4 +54,4 @@ The app counts:
 - sessions tomorrow
 - studios in network
 
-When the source data is ready, this local JSON can be replaced with Airtable, Google Sheets, Supabase, or a Netlify function.
+When Airtable is configured in Netlify, the fallback JSON is replaced by the live Airtable records.
