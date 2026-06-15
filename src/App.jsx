@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import fallbackSessions from "./data/sessions.json";
 
 const EASTERN_TZ = "America/New_York";
 const FIXED_STUDIO_COUNT = 51;
@@ -193,6 +192,24 @@ const setStoredMember = (member) => {
   window.localStorage.setItem("tdsMember", JSON.stringify(member));
 };
 
+const fetchMemberByEmail = async (email) => {
+  const response = await fetch(`/api/member?email=${encodeURIComponent(email)}`);
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error || "Member lookup failed");
+  return payload.member;
+};
+
+const saveMember = async (member) => {
+  const response = await fetch("/api/member", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ member })
+  });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.error || "Member save failed");
+  return payload.member;
+};
+
 const HeaderLogo = () => (
   <button type="button" className="tds-nav-logo" onClick={() => navigateTo("/")}>
     <MiniCalendarLogo />
@@ -242,9 +259,13 @@ const AuthShell = ({ title, eyebrow, children }) => (
 const LoginPage = ({ onMemberChange }) => {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault();
+    setIsLoading(true);
+    setMessage("");
+
     const member = getStoredMember();
 
     if (member?.paid && (!email || member.email === email)) {
@@ -253,7 +274,21 @@ const LoginPage = ({ onMemberChange }) => {
       return;
     }
 
-    setMessage("No paid membership found on this browser yet. Join to start checkout.");
+    try {
+      const airtableMember = await fetchMemberByEmail(email);
+      if (airtableMember?.paid) {
+        setStoredMember(airtableMember);
+        onMemberChange(airtableMember);
+        navigateTo(airtableMember.profileComplete ? "/calendar" : "/profile");
+        return;
+      }
+
+      setMessage("No active membership found for that email yet.");
+    } catch {
+      setMessage("Could not check members right now. Try again in a moment.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -262,6 +297,7 @@ const LoginPage = ({ onMemberChange }) => {
         <label>
           Email
           <input
+            required
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -269,7 +305,9 @@ const LoginPage = ({ onMemberChange }) => {
           />
         </label>
         {message ? <p className="tds-form-note">{message}</p> : null}
-        <button type="submit">Continue</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Checking..." : "Continue"}
+        </button>
       </form>
       <button type="button" className="tds-link-button" onClick={() => navigateTo("/signup")}>
         Need a membership? Sign up
@@ -280,6 +318,7 @@ const LoginPage = ({ onMemberChange }) => {
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
+  const [plan, setPlan] = useState("monthly");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -292,7 +331,7 @@ const SignupPage = () => {
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email, plan })
       });
       const payload = await response.json();
       if (!response.ok || !payload.url) throw new Error(payload.error || "Checkout failed");
@@ -319,6 +358,24 @@ const SignupPage = () => {
             placeholder="you@example.com"
           />
         </label>
+        <div className="tds-plan-picker" role="group" aria-label="Membership plan">
+          <button
+            type="button"
+            className={plan === "monthly" ? "is-selected" : ""}
+            onClick={() => setPlan("monthly")}
+          >
+            <span>Monthly</span>
+            <small>Flexible access</small>
+          </button>
+          <button
+            type="button"
+            className={plan === "annual" ? "is-selected" : ""}
+            onClick={() => setPlan("annual")}
+          >
+            <span>Annual</span>
+            <small>Best for regular browsing</small>
+          </button>
+        </div>
         {error ? <p className="tds-form-error">{error}</p> : null}
         <button type="submit" disabled={isLoading}>
           {isLoading ? "Opening Stripe..." : "Continue to Secure Checkout"}
@@ -359,6 +416,7 @@ const ProfilePage = ({ member, onMemberChange }) => {
         if (!payload.paid) throw new Error("Payment was not completed");
         const nextMember = {
           ...getStoredMember(),
+          ...(payload.member || {}),
           paid: true,
           email: payload.email || form.email,
           stripeCustomerId: payload.customerId,
@@ -375,21 +433,28 @@ const ProfilePage = ({ member, onMemberChange }) => {
 
   const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
-  const saveProfile = (event) => {
+  const saveProfile = async (event) => {
     event.preventDefault();
     if (!member?.paid) {
       setStatus("error");
       return;
     }
 
-    const nextMember = {
-      ...member,
-      ...form,
-      profileComplete: true
-    };
-    setStoredMember(nextMember);
-    onMemberChange(nextMember);
-    navigateTo("/calendar");
+    setStatus("saving");
+
+    try {
+      const nextMember = await saveMember({
+        ...member,
+        ...form,
+        paid: true,
+        profileComplete: true
+      });
+      setStoredMember(nextMember);
+      onMemberChange(nextMember);
+      navigateTo("/calendar");
+    } catch {
+      setStatus("error");
+    }
   };
 
   if (!member?.paid && !hasCheckoutSession) {
@@ -417,7 +482,8 @@ const ProfilePage = ({ member, onMemberChange }) => {
         <p>No endless searching.<br />No scattered schedules.<br />Just real experiences, happening today.</p>
         <h3>Please answer a few questions to complete your profile</h3>
         {status === "verifying" ? <p className="tds-form-note">Verifying Stripe payment...</p> : null}
-        {status === "error" ? <p className="tds-form-error">Could not verify payment. Try checkout again.</p> : null}
+        {status === "saving" ? <p className="tds-form-note">Saving your profile...</p> : null}
+        {status === "error" ? <p className="tds-form-error">Something did not save correctly. Try again in a moment.</p> : null}
 
         <label>
           Name
@@ -480,8 +546,8 @@ const ProfilePage = ({ member, onMemberChange }) => {
           Tell us a little bit about yourself!
           <textarea value={form.bio} onChange={(event) => updateField("bio", event.target.value)} placeholder="Bio" />
         </label>
-        <button type="submit" disabled={!member?.paid || status === "verifying"}>
-          {status === "verifying" ? "Verifying..." : "Begin Browsing"}
+        <button type="submit" disabled={!member?.paid || status === "verifying" || status === "saving"}>
+          {status === "verifying" ? "Verifying..." : status === "saving" ? "Saving..." : "Begin Browsing"}
         </button>
       </form>
     </main>
@@ -704,32 +770,45 @@ const ScheduleSection = ({ now, activeSessions, dataStatus }) => {
             <h2 id="tds-schedule-heading">Today's Classes</h2>
             <p>{formatEasternHeaderDate(now)}</p>
             <p>
-              Showing {visibleItems.length}{" "}
-              {visibleItems.length === 1 ? "class" : "classes"}
-              {activeFilter !== "all" ? ` in ${activeFilter}` : ""}
-              {hasMoreToShow ? " - load more below." : ""}
+              {dataStatus.loading
+                ? "Loading the live class list."
+                : dataStatus.error
+                  ? "Live classes are temporarily unavailable."
+                  : `Showing ${visibleItems.length} ${visibleItems.length === 1 ? "class" : "classes"}${activeFilter !== "all" ? ` in ${activeFilter}` : ""}${hasMoreToShow ? " - load more below." : ""}`}
             </p>
           </div>
         </div>
 
-        <div className="tds-filter-row" aria-label="Class filters">
-          {filterOptions.map((filter) => {
-            const isActive = activeFilter === filter;
+        {dataStatus.loading ? (
+          <div className="tds-empty-state">
+            <strong>All these classes are exhausting.</strong>
+            <span>Give the calendar a second to stretch before it starts listing everything.</span>
+          </div>
+        ) : dataStatus.error ? (
+          <div className="tds-empty-state">
+            <strong>The class list is catching its breath.</strong>
+            <span>Refresh in a moment, or check the Airtable token if it keeps resting.</span>
+          </div>
+        ) : (
+          <>
+            <div className="tds-filter-row" aria-label="Class filters">
+              {filterOptions.map((filter) => {
+                const isActive = activeFilter === filter;
 
-            return (
-              <button
-                key={filter}
-                type="button"
-                onClick={() => setActiveFilter(filter)}
-                className={isActive ? "is-active" : ""}
-              >
-                {filter === "all" ? "All Classes" : filter}
-              </button>
-            );
-          })}
-        </div>
+                return (
+                  <button
+                    key={filter}
+                    type="button"
+                    onClick={() => setActiveFilter(filter)}
+                    className={isActive ? "is-active" : ""}
+                  >
+                    {filter === "all" ? "All Classes" : filter}
+                  </button>
+                );
+              })}
+            </div>
 
-        {visibleItems.length === 0 ? (
+            {visibleItems.length === 0 ? (
           <div className="tds-empty-state">
             <strong>No remaining classes for today</strong>
             <span>Try selecting a different category.</span>
@@ -805,6 +884,8 @@ const ScheduleSection = ({ now, activeSessions, dataStatus }) => {
             ) : null}
           </div>
         )}
+          </>
+        )}
       </div>
 
       {selectedSession ? (
@@ -849,11 +930,12 @@ export default function App() {
   const [path, setPath] = useState(() => window.location.pathname);
   const [member, setMember] = useState(() => getStoredMember());
   const [now, setNow] = useState(() => floorToMinute(new Date()));
-  const [sessions, setSessions] = useState(fallbackSessions);
+  const [sessions, setSessions] = useState([]);
   const [dataStatus, setDataStatus] = useState({
-    source: "sample",
-    count: fallbackSessions.length,
-    error: ""
+    source: "airtable",
+    count: 0,
+    error: "",
+    loading: true
   });
   const [displayToday, setDisplayToday] = useState("0");
   const [displayTomorrow, setDisplayTomorrow] = useState("0");
@@ -908,16 +990,18 @@ export default function App() {
         setDataStatus({
           source: payload.source || "airtable",
           count: payload.count || payload.sessions.length,
-          error: ""
+          error: "",
+          loading: false
         });
       })
       .catch((error) => {
-        if (isMounted) setSessions(fallbackSessions);
+        if (isMounted) setSessions([]);
         if (isMounted) {
           setDataStatus({
-            source: "sample",
-            count: fallbackSessions.length,
-            error: error instanceof Error ? error.message : "Airtable unavailable"
+            source: "airtable",
+            count: 0,
+            error: error instanceof Error ? error.message : "Airtable unavailable",
+            loading: false
           });
         }
       });

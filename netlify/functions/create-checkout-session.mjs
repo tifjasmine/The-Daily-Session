@@ -11,19 +11,26 @@ const getBaseUrl = (event) => {
 
 export const handler = async (event) => {
   const secretKey = process.env.STRIPE_SECRET_KEY;
-  const priceId = process.env.STRIPE_PRICE_ID;
+  const payload = event.body ? JSON.parse(event.body) : {};
+  const plan = payload.plan === "annual" ? "annual" : "monthly";
+  const priceId =
+    plan === "annual"
+      ? process.env.STRIPE_ANNUAL_PRICE_ID
+      : process.env.STRIPE_MONTHLY_PRICE_ID || process.env.STRIPE_PRICE_ID;
 
   if (!secretKey || !priceId) {
     return {
       statusCode: 500,
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        error: "Missing STRIPE_SECRET_KEY or STRIPE_PRICE_ID"
+        error:
+          plan === "annual"
+            ? "Missing STRIPE_SECRET_KEY or STRIPE_ANNUAL_PRICE_ID"
+            : "Missing STRIPE_SECRET_KEY or STRIPE_MONTHLY_PRICE_ID"
       })
     };
   }
 
-  const payload = event.body ? JSON.parse(event.body) : {};
   const email = String(payload.email || "").trim();
   const baseUrl = getBaseUrl(event);
 

@@ -40,9 +40,38 @@ The signup page starts Stripe Checkout through `/api/create-checkout-session`.
 Set these Netlify environment variables:
 
 - `STRIPE_SECRET_KEY`
-- `STRIPE_PRICE_ID`
+- `STRIPE_MONTHLY_PRICE_ID`
+- `STRIPE_ANNUAL_PRICE_ID`
 
 After a successful checkout, Stripe returns members to `/profile`, where payment is verified before the profile form unlocks the calendar.
+
+## Airtable Members
+
+Manual members and profile data are read/written through `/api/member`.
+
+Create a table named `Members`, or set:
+
+- `AIRTABLE_MEMBERS_TABLE_ID`
+
+Recommended member fields:
+
+- `Email`
+- `Paid`
+- `Membership Type`
+- `Profile Complete`
+- `Name`
+- `Pronouns`
+- `Birthday`
+- `Instagram`
+- `Neighborhood`
+- `Heard About Us`
+- `Interests`
+- `Experience Level`
+- `Bio`
+- `Stripe Customer ID`
+- `Stripe Subscription ID`
+
+To manually add a member, create a record with `Email` and check `Paid`.
 
 ## Updating Session Data
 

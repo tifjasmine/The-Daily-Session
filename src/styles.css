@@ -717,6 +717,41 @@ h1 em {
   font-weight: 700;
 }
 
+.tds-plan-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.tds-plan-picker button {
+  min-height: 72px;
+  border: 1px solid #b58e74;
+  border-radius: 14px;
+  background: #fff9f3;
+  color: #3d2314;
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  text-align: left;
+}
+
+.tds-plan-picker button.is-selected {
+  border-color: #4b2414;
+  background: #f1e2d2;
+  box-shadow: inset 0 0 0 2px #4b2414;
+}
+
+.tds-plan-picker span {
+  font-weight: 900;
+}
+
+.tds-plan-picker small {
+  color: #8e6c58;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
 .tds-auth-form input,
 .tds-profile-card input,
 .tds-profile-card select,

@@ -1,3 +1,5 @@
+import { upsertMember } from "./airtable-members.mjs";
+
 export const handler = async (event) => {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   const sessionId = event.queryStringParameters?.session_id || "";
@@ -41,15 +43,28 @@ export const handler = async (event) => {
   }
 
   const paid = data.payment_status === "paid" || data.status === "complete";
+  const email = data.customer_details?.email || data.customer_email || "";
+  let member = null;
+
+  if (paid && email) {
+    member = await upsertMember({
+      email,
+      paid: true,
+      membershipType: data.subscription ? "Stripe Membership" : "Stripe",
+      stripeCustomerId: data.customer || "",
+      stripeSubscriptionId: data.subscription || ""
+    });
+  }
 
   return {
     statusCode: 200,
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       paid,
-      email: data.customer_details?.email || data.customer_email || "",
+      email,
       customerId: data.customer || "",
-      subscriptionId: data.subscription || ""
+      subscriptionId: data.subscription || "",
+      member
     })
   };
 };
