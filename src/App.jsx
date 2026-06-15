@@ -172,7 +172,7 @@ const normalizeSession = (session) => ({
   startDate: new Date(session.start)
 });
 
-const ScheduleSection = ({ now, activeSessions }) => {
+const ScheduleSection = ({ now, activeSessions, dataStatus }) => {
   const [activeFilter, setActiveFilter] = useState("all");
   const [visibleCount, setVisibleCount] = useState(10);
   const [modalSessionId, setModalSessionId] = useState(null);
@@ -260,6 +260,10 @@ const ScheduleSection = ({ now, activeSessions }) => {
               {visibleItems.length === 1 ? "class" : "classes"}
               {activeFilter !== "all" ? ` in ${activeFilter}` : ""}
               {hasMoreToShow ? " - load more below." : ""}
+            </p>
+            <p className="tds-data-source">
+              Data source: {dataStatus.source}
+              {dataStatus.count ? ` (${dataStatus.count} loaded)` : ""}
             </p>
           </div>
         </div>
@@ -400,6 +404,11 @@ const ScheduleSection = ({ now, activeSessions }) => {
 export default function App() {
   const [now, setNow] = useState(() => floorToMinute(new Date()));
   const [sessions, setSessions] = useState(fallbackSessions);
+  const [dataStatus, setDataStatus] = useState({
+    source: "sample",
+    count: fallbackSessions.length,
+    error: ""
+  });
   const [displayToday, setDisplayToday] = useState("0");
   const [displayTomorrow, setDisplayTomorrow] = useState("0");
   const [displayStudios, setDisplayStudios] = useState("0");
@@ -439,9 +448,21 @@ export default function App() {
       .then((payload) => {
         if (!isMounted || !Array.isArray(payload.sessions)) return;
         setSessions(payload.sessions);
+        setDataStatus({
+          source: payload.source || "airtable",
+          count: payload.count || payload.sessions.length,
+          error: ""
+        });
       })
-      .catch(() => {
+      .catch((error) => {
         if (isMounted) setSessions(fallbackSessions);
+        if (isMounted) {
+          setDataStatus({
+            source: "sample",
+            count: fallbackSessions.length,
+            error: error instanceof Error ? error.message : "Airtable unavailable"
+          });
+        }
       });
 
     return () => {
@@ -562,7 +583,11 @@ export default function App() {
         </aside>
       </section>
 
-      <ScheduleSection now={now} activeSessions={activeSessions} />
+      <ScheduleSection
+        now={now}
+        activeSessions={activeSessions}
+        dataStatus={dataStatus}
+      />
     </main>
   );
 }
