@@ -138,6 +138,8 @@ export const handler = async () => {
         "cache-control": "public, max-age=60"
       },
       body: JSON.stringify({
+        source: "airtable",
+        count: records.length,
         sessions: records.map(mapRecord)
       })
     };
