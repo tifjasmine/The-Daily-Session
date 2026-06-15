@@ -55,6 +55,21 @@ const formatEasternMonthDay = (date) =>
     day: "numeric"
   });
 
+const formatEasternHeaderDate = (date) =>
+  date.toLocaleDateString("en-US", {
+    timeZone: EASTERN_TZ,
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  });
+
+const formatEasternTime = (date) =>
+  date.toLocaleTimeString("en-US", {
+    timeZone: EASTERN_TZ,
+    hour: "numeric",
+    minute: "2-digit"
+  });
+
 const isCancelled = (status) => {
   const normalized = String(status || "").trim().toLowerCase();
   return normalized.includes("cancelled") || normalized.includes("canceled");
@@ -123,6 +138,265 @@ const StatsCard = ({ label, value, description }) => (
   </div>
 );
 
+const getCategoryPillStyle = (categoryLabel) => {
+  const lower = categoryLabel.toLowerCase();
+
+  if (lower.includes("mind") || lower.includes("body")) {
+    return { background: "#f1e2d2", color: "#7a4a2a", border: "#e2c4aa" };
+  }
+
+  if (lower.includes("dance") || lower.includes("movement")) {
+    return { background: "#f6dfc9", color: "#9b5a2e", border: "#e7bc94" };
+  }
+
+  if (lower.includes("creative") || lower.includes("arts")) {
+    return { background: "#e8e4d9", color: "#5f5b49", border: "#cfc7b4" };
+  }
+
+  if (lower.includes("martial")) {
+    return { background: "#e5e1dd", color: "#5a5148", border: "#c9c1b8" };
+  }
+
+  if (lower.includes("fitness") || lower.includes("sport")) {
+    return { background: "#eee4d8", color: "#6b4a2f", border: "#d8c1a9" };
+  }
+
+  return { background: "#f1e2d2", color: "#7a4a2a", border: "#e2c4aa" };
+};
+
+const normalizeSession = (session) => ({
+  ...session,
+  title: session.title || session.className || "Untitled Class",
+  studio: session.studio || session.studioName || "Studio",
+  category: session.category || "Class",
+  startDate: new Date(session.start)
+});
+
+const ScheduleSection = ({ now, activeSessions }) => {
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [visibleCount, setVisibleCount] = useState(10);
+  const [modalSessionId, setModalSessionId] = useState(null);
+
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [activeFilter]);
+
+  useEffect(() => {
+    if (!modalSessionId) return undefined;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setModalSessionId(null);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [modalSessionId]);
+
+  const todayKey = useMemo(() => getEasternDateKey(now), [now]);
+
+  const todayItems = useMemo(
+    () =>
+      activeSessions
+        .filter(
+          (session) =>
+            getEasternDateKey(session.startDate) === todayKey &&
+            session.startDate.getTime() >= now.getTime()
+        )
+        .sort((a, b) => a.startDate.getTime() - b.startDate.getTime()),
+    [activeSessions, todayKey, now]
+  );
+
+  const filterOptions = useMemo(() => {
+    const labels = new Set();
+    todayItems.forEach((session) => labels.add(session.category));
+    return ["all", ...Array.from(labels).sort((a, b) => a.localeCompare(b))];
+  }, [todayItems]);
+
+  const filteredItems = useMemo(() => {
+    if (activeFilter === "all") return todayItems;
+    return todayItems.filter((session) => session.category === activeFilter);
+  }, [todayItems, activeFilter]);
+
+  const visibleItems = useMemo(
+    () => filteredItems.slice(0, visibleCount),
+    [filteredItems, visibleCount]
+  );
+
+  const groupedItems = useMemo(() => {
+    const groups = new Map();
+
+    visibleItems.forEach((session) => {
+      const timeLabel = formatEasternTime(session.startDate);
+      if (!groups.has(timeLabel)) groups.set(timeLabel, []);
+      groups.get(timeLabel).push(session);
+    });
+
+    return Array.from(groups.entries());
+  }, [visibleItems]);
+
+  const selectedSession = useMemo(
+    () => activeSessions.find((session) => session.id === modalSessionId),
+    [activeSessions, modalSessionId]
+  );
+
+  const hasMoreToShow = visibleCount < filteredItems.length;
+
+  return (
+    <section className="tds-schedule" aria-labelledby="tds-schedule-heading">
+      <div className="tds-schedule-inner">
+        <div className="tds-schedule-header">
+          <div>
+            <h2 id="tds-schedule-heading">Today's Classes</h2>
+            <p>{formatEasternHeaderDate(now)}</p>
+            <p>
+              Showing {visibleItems.length}{" "}
+              {visibleItems.length === 1 ? "class" : "classes"}
+              {activeFilter !== "all" ? ` in ${activeFilter}` : ""}
+              {hasMoreToShow ? " - load more below." : ""}
+            </p>
+          </div>
+        </div>
+
+        <div className="tds-filter-row" aria-label="Class filters">
+          {filterOptions.map((filter) => {
+            const isActive = activeFilter === filter;
+
+            return (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setActiveFilter(filter)}
+                className={isActive ? "is-active" : ""}
+              >
+                {filter === "all" ? "All Classes" : filter}
+              </button>
+            );
+          })}
+        </div>
+
+        {visibleItems.length === 0 ? (
+          <div className="tds-empty-state">
+            <strong>No remaining classes for today</strong>
+            <span>Try selecting a different category.</span>
+          </div>
+        ) : (
+          <div className="tds-session-groups">
+            {groupedItems.map(([timeLabel, timeItems]) => (
+              <div className="tds-session-group" key={timeLabel}>
+                <div className="tds-time-row">
+                  <span>{timeLabel}</span>
+                  <div />
+                </div>
+
+                <div className="tds-session-list">
+                  {timeItems.map((session) => {
+                    const pill = getCategoryPillStyle(session.category);
+
+                    return (
+                      <article className="tds-session-card" key={session.id}>
+                        <div
+                          className="tds-session-photo"
+                          style={{
+                            backgroundImage: session.photo
+                              ? `url(${session.photo})`
+                              : "none"
+                          }}
+                          aria-hidden="true"
+                        />
+
+                        <div className="tds-session-main">
+                          <div className="tds-session-meta">
+                            <span
+                              style={{
+                                backgroundColor: pill.background,
+                                color: pill.color,
+                                borderColor: pill.border
+                              }}
+                            >
+                              {session.category}
+                            </span>
+                            {session.neighborhood ? <small>{session.neighborhood}</small> : null}
+                          </div>
+
+                          <h3>{session.title}</h3>
+                          <p>{session.studio}</p>
+                        </div>
+
+                        <div className="tds-session-actions">
+                          <button type="button" onClick={() => setModalSessionId(session.id)}>
+                            Details
+                          </button>
+                          {session.studioSite ? (
+                            <a href={session.studioSite} target="_blank" rel="noreferrer">
+                              Sign Up
+                            </a>
+                          ) : (
+                            <span>Sign up unavailable</span>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {hasMoreToShow ? (
+              <div className="tds-load-more">
+                <button type="button" onClick={() => setVisibleCount((count) => count + 10)}>
+                  Load More Classes
+                </button>
+              </div>
+            ) : null}
+          </div>
+        )}
+      </div>
+
+      {selectedSession ? (
+        <div className="tds-modal-backdrop" onClick={() => setModalSessionId(null)}>
+          <div className="tds-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="tds-modal-header">
+              <div>
+                <span>{formatEasternTime(selectedSession.startDate)}</span>
+                <h3>{selectedSession.title}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalSessionId(null)}
+                aria-label="Close details"
+              >
+                ×
+              </button>
+            </div>
+            <div className="tds-modal-body">
+              {selectedSession.photo ? (
+                <img src={selectedSession.photo} alt="" />
+              ) : null}
+              <div>
+                <span>{selectedSession.category}</span>
+                <p>{selectedSession.studio}</p>
+                {selectedSession.neighborhood ? <p>{selectedSession.neighborhood}</p> : null}
+                {selectedSession.studioSite ? (
+                  <a href={selectedSession.studioSite} target="_blank" rel="noreferrer">
+                    Sign Up
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </section>
+  );
+};
+
 export default function App() {
   const [now, setNow] = useState(() => floorToMinute(new Date()));
   const [displayToday, setDisplayToday] = useState("0");
@@ -160,7 +434,7 @@ export default function App() {
     () =>
       sessions
         .filter((session) => !isCancelled(session.status))
-        .map((session) => ({ ...session, startDate: new Date(session.start) }))
+        .map(normalizeSession)
         .filter((session) => !Number.isNaN(session.startDate.getTime())),
     []
   );
@@ -265,6 +539,8 @@ export default function App() {
           </div>
         </aside>
       </section>
+
+      <ScheduleSection now={now} activeSessions={activeSessions} />
     </main>
   );
 }
