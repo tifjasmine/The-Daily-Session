@@ -261,6 +261,330 @@ h1 em {
   line-height: 1.5;
 }
 
+.tds-schedule {
+  background: #e9dfd2;
+  color: #4a2108;
+  padding: 56px 40px 72px;
+}
+
+.tds-schedule-inner {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.tds-schedule-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.tds-schedule-header h2 {
+  margin: 0 0 8px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.7rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.tds-schedule-header p {
+  margin: 0;
+  color: #8e6c58;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.tds-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.tds-filter-row button,
+.tds-load-more button {
+  min-height: 42px;
+  border: 1px solid #9d7c67;
+  border-radius: 999px;
+  background: #f7f2ec;
+  color: #5a2b0c;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.tds-filter-row button.is-active,
+.tds-load-more button {
+  background: #5a2b0c;
+  color: #fff;
+}
+
+.tds-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #decfc1;
+  border-radius: 8px;
+  background: #f7f2ec;
+  padding: 40px 24px;
+  color: #8e6c58;
+  text-align: center;
+}
+
+.tds-empty-state strong {
+  color: #4a2108;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+.tds-session-groups {
+  display: grid;
+  gap: 32px;
+}
+
+.tds-session-group {
+  display: grid;
+  gap: 12px;
+}
+
+.tds-time-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tds-time-row span {
+  min-width: 88px;
+  border: 1px solid #ddc7b5;
+  border-radius: 999px;
+  background: #f2e6da;
+  color: #4a2108;
+  padding: 8px 14px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.tds-time-row div {
+  height: 1px;
+  flex: 1;
+  background: #d9c7b8;
+}
+
+.tds-session-list {
+  display: grid;
+  gap: 12px;
+}
+
+.tds-session-card {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  border: 1px solid #e0d1c4;
+  border-radius: 8px;
+  background: #f8f4ef;
+  padding: 16px;
+}
+
+.tds-session-photo {
+  width: 92px;
+  height: 72px;
+  border-radius: 8px;
+  background-color: #e9ded2;
+  background-position: center;
+  background-size: cover;
+}
+
+.tds-session-main {
+  min-width: 0;
+}
+
+.tds-session-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tds-session-meta span {
+  border: 1px solid;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tds-session-meta small {
+  color: #8e6c58;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.tds-session-card h3 {
+  margin: 0;
+  color: #4a2108;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.65rem;
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.tds-session-card p {
+  margin: 6px 0 0;
+  color: #8a6b58;
+  font-size: 0.98rem;
+}
+
+.tds-session-actions {
+  display: grid;
+  gap: 8px;
+  min-width: 128px;
+}
+
+.tds-session-actions button,
+.tds-session-actions a,
+.tds-session-actions span,
+.tds-modal-body a {
+  min-height: 42px;
+  border-radius: 8px;
+  padding: 10px 16px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.tds-session-actions button,
+.tds-modal-body a {
+  border: 0;
+  background: #5a2b0c;
+  color: #fff;
+  cursor: pointer;
+}
+
+.tds-session-actions a {
+  border: 1px solid #9d7c67;
+  background: #f7f2ec;
+  color: #5a2b0c;
+}
+
+.tds-session-actions span {
+  color: #a28a79;
+}
+
+.tds-load-more {
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+}
+
+.tds-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(34, 20, 12, 0.72);
+  padding: 24px;
+}
+
+.tds-modal {
+  width: min(760px, 100%);
+  max-height: 88vh;
+  overflow: hidden;
+  border: 1px solid #d8c4b2;
+  border-radius: 8px;
+  background: #f8f4ef;
+  box-shadow: 0 24px 80px rgba(34, 20, 12, 0.36);
+}
+
+.tds-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid #ddc7b5;
+  background: #f3e8dd;
+  padding: 20px 24px;
+}
+
+.tds-modal-header span {
+  color: #8e6c58;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.tds-modal-header h3 {
+  margin: 4px 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.tds-modal-header button {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border: 1px solid #9d7c67;
+  border-radius: 999px;
+  background: #fff9f3;
+  color: #5a2b0c;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.tds-modal-body {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) 1fr;
+  gap: 24px;
+  padding: 24px;
+}
+
+.tds-modal-body img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.tds-modal-body span {
+  display: inline-flex;
+  margin-bottom: 12px;
+  border-radius: 999px;
+  background: #f1e2d2;
+  color: #7a4a2a;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tds-modal-body p {
+  margin: 0 0 8px;
+  color: #6b4a2f;
+  font-size: 1rem;
+}
+
+.tds-modal-body a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+}
+
 @media (max-width: 860px) {
   .tds-hero {
     min-height: auto;
@@ -272,6 +596,24 @@ h1 em {
 
   .tds-panel {
     width: 100%;
+  }
+
+  .tds-schedule {
+    padding: 40px 24px 56px;
+  }
+
+  .tds-session-card {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .tds-session-photo {
+    width: 72px;
+    height: 72px;
+  }
+
+  .tds-session-actions {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -345,5 +687,66 @@ h1 em {
 
   .tds-stat-value {
     font-size: 48px;
+  }
+
+  .tds-schedule {
+    padding: 32px 20px 48px;
+  }
+
+  .tds-schedule-header h2 {
+    font-size: 2rem;
+  }
+
+  .tds-filter-row button {
+    min-height: 40px;
+    padding: 9px 12px;
+    font-size: 0.78rem;
+  }
+
+  .tds-session-groups {
+    gap: 24px;
+  }
+
+  .tds-session-card {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .tds-session-card h3 {
+    font-size: 1.15rem;
+  }
+
+  .tds-session-card p {
+    font-size: 0.9rem;
+  }
+
+  .tds-session-photo {
+    width: 56px;
+    height: 56px;
+  }
+
+  .tds-session-actions button,
+  .tds-session-actions a,
+  .tds-session-actions span {
+    padding: 9px 12px;
+    font-size: 0.84rem;
+  }
+
+  .tds-modal-backdrop {
+    padding: 12px;
+  }
+
+  .tds-modal-header {
+    padding: 16px;
+  }
+
+  .tds-modal-header h3 {
+    font-size: 1.45rem;
+  }
+
+  .tds-modal-body {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px;
   }
 }
