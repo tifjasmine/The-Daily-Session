@@ -3,6 +3,10 @@
     "id": "sample-1",
     "title": "Morning Flow",
     "studio": "Neighborhood Studio",
+    "category": "Mind + Body",
+    "neighborhood": "Fishtown",
+    "photo": "https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?auto=format&fit=crop&w=600&q=80",
+    "studioSite": "https://example.com",
     "start": "2026-06-15T09:00:00-04:00",
     "status": "Scheduled"
   },
@@ -10,6 +14,10 @@
     "id": "sample-2",
     "title": "Pilates Strength",
     "studio": "Center City Movement",
+    "category": "Fitness + Sport",
+    "neighborhood": "Center City",
+    "photo": "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=600&q=80",
+    "studioSite": "https://example.com",
     "start": "2026-06-15T18:00:00-04:00",
     "status": "Scheduled"
   },
@@ -17,6 +25,10 @@
     "id": "sample-3",
     "title": "Ceramics Open Studio",
     "studio": "Clay House",
+    "category": "Creative Arts",
+    "neighborhood": "South Philly",
+    "photo": "https://images.unsplash.com/photo-1493106819501-66d381c466f1?auto=format&fit=crop&w=600&q=80",
+    "studioSite": "https://example.com",
     "start": "2026-06-16T12:00:00-04:00",
     "status": "Scheduled"
   },
@@ -24,7 +36,33 @@
     "id": "sample-4",
     "title": "Aerial Basics",
     "studio": "Circus Arts Philadelphia",
+    "category": "Dance + Movement",
+    "neighborhood": "Callowhill",
+    "photo": "https://images.unsplash.com/photo-1504609813442-a8924e83f76e?auto=format&fit=crop&w=600&q=80",
+    "studioSite": "https://example.com",
     "start": "2026-06-16T19:00:00-04:00",
+    "status": "Scheduled"
+  },
+  {
+    "id": "sample-5",
+    "title": "Evening Salsa Social",
+    "studio": "Rittenhouse Dance Lab",
+    "category": "Dance + Movement",
+    "neighborhood": "Rittenhouse",
+    "photo": "https://images.unsplash.com/photo-1540324155974-7523202daa3f?auto=format&fit=crop&w=600&q=80",
+    "studioSite": "https://example.com",
+    "start": "2026-06-15T20:00:00-04:00",
+    "status": "Scheduled"
+  },
+  {
+    "id": "sample-6",
+    "title": "Intro to Wheel Throwing",
+    "studio": "Clay House",
+    "category": "Creative Arts",
+    "neighborhood": "South Philly",
+    "photo": "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=600&q=80",
+    "studioSite": "https://example.com",
+    "start": "2026-06-15T19:30:00-04:00",
     "status": "Scheduled"
   }
 ]
