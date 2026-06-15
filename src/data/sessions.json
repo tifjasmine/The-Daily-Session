@@ -1,0 +1,30 @@
+[
+  {
+    "id": "sample-1",
+    "title": "Morning Flow",
+    "studio": "Neighborhood Studio",
+    "start": "2026-06-15T09:00:00-04:00",
+    "status": "Scheduled"
+  },
+  {
+    "id": "sample-2",
+    "title": "Pilates Strength",
+    "studio": "Center City Movement",
+    "start": "2026-06-15T18:00:00-04:00",
+    "status": "Scheduled"
+  },
+  {
+    "id": "sample-3",
+    "title": "Ceramics Open Studio",
+    "studio": "Clay House",
+    "start": "2026-06-16T12:00:00-04:00",
+    "status": "Scheduled"
+  },
+  {
+    "id": "sample-4",
+    "title": "Aerial Basics",
+    "studio": "Circus Arts Philadelphia",
+    "start": "2026-06-16T19:00:00-04:00",
+    "status": "Scheduled"
+  }
+]
