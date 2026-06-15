@@ -26,11 +26,12 @@ Set this required Netlify environment variable:
 
 - `AIRTABLE_TOKEN`
 
-Optional overrides are already defaulted to the current base/table/view:
+Optional overrides are already defaulted to the current base/table:
 
 - `AIRTABLE_BASE_ID=appQxIhwr00DmKBx5`
 - `AIRTABLE_TABLE_ID=tblGTqTTdAlPPVXm0`
-- `AIRTABLE_VIEW_ID=viwAMPxJ2RPAIR4oI`
+
+Only set `AIRTABLE_VIEW_ID` if you intentionally want the site limited to one Airtable view.
 
 ## Updating Session Data
 
