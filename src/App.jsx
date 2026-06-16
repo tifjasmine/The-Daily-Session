@@ -658,14 +658,124 @@ const CreateAccountPage = ({ onMemberChange, onSessionChange }) => {
   );
 };
 
+const membershipPerks = [
+  {
+    color: "#c4572a",
+    icon: "target",
+    title: "Studio Discounts",
+    desc: "First-class-free deals, percentage discounts, and member-only rates at 50+ partner studios across Philadelphia."
+  },
+  {
+    color: "#3d5028",
+    icon: "leaf",
+    title: "Provider Discounts",
+    desc: "Monthly discounts toward wellness providers: chiropractors, naturopaths, massage therapists, reiki practitioners, and more."
+  },
+  {
+    color: "#e8a060",
+    icon: "calendar",
+    title: "Full 30-Day Calendar",
+    desc: "Every class in the city, filterable by category, studio, neighborhood, level, price, and more."
+  },
+  {
+    color: "#c4572a",
+    icon: "map",
+    title: "Everything in One Place",
+    desc: "No more tab-hopping across studio websites. The Daily Session gathers classes, studios, and providers so you can just move."
+  },
+  {
+    color: "#3d5028",
+    icon: "bookmark",
+    title: "Save Your Classes",
+    desc: "Bookmark classes you want to revisit and keep your member dashboard organized around what you love."
+  },
+  {
+    color: "#e8a060",
+    icon: "sparkle",
+    title: "Member Dashboard",
+    desc: "Your personal hub for saved classes, membership details, and your Daily Session profile."
+  }
+];
+
+const membershipChecklist = [
+  ["Full calendar access", "All classes across all studios, updated daily."],
+  ["Studio partner discounts", "First class free, 10-20% off, and member rates at 50+ studios."],
+  ["Monthly wellness discounts", "Applies to chiropractic, massage, naturopathic, reiki, and somatic providers."],
+  ["Save classes", "Bookmark any class and find it instantly in your dashboard."],
+  ["Member dashboard", "Your personal hub for everything The Daily Session."],
+  ["Cancel anytime", "No contracts. No commitment. Just movement."]
+];
+
+const pricingFeatures = [
+  "Full 30-day class calendar",
+  "Studio partner discounts at 50+ studios",
+  "Monthly wellness provider discounts",
+  "Save and manage your classes",
+  "Member dashboard",
+  "Cancel anytime"
+];
+
+const membershipFaqs = [
+  [
+    "How does the provider discount work?",
+    "Each month you can book with participating wellness providers at the listed member rate. Discounts vary by provider and apply through the provider's own booking flow."
+  ],
+  [
+    "Do I book classes through The Daily Session?",
+    "No. The Daily Session is a guide and member hub, not a booking platform. We link you directly to each studio's booking page."
+  ],
+  [
+    "Can I cancel anytime?",
+    "Yes. No contracts or long-term commitment. You keep access until the end of your billing period."
+  ],
+  [
+    "What is the difference between monthly and annual?",
+    "Monthly is $5/month. Annual is $50/year, which works out to about $4/month and saves you two months."
+  ],
+  [
+    "What kinds of classes are in the calendar?",
+    "Mind-body practices, dance and movement arts, sports and fitness, acrobatics and circus arts, martial arts, creative arts, recreation, and food and drink experiences across Philadelphia."
+  ]
+];
+
+const SectionKicker = ({ label, center = false }) => (
+  <div className={`tds-section-kicker ${center ? "is-centered" : ""}`}>
+    <span />
+    {label}
+  </div>
+);
+
+const PlanToggle = ({ plan, setPlan, theme = "light" }) => (
+  <div className={`tds-join-plan-toggle is-${theme}`} role="group" aria-label="Membership plan">
+    <button
+      type="button"
+      className={plan === "monthly" ? "is-selected" : ""}
+      onClick={() => setPlan("monthly")}
+    >
+      Monthly
+    </button>
+    <button
+      type="button"
+      className={plan === "annual" ? "is-selected" : ""}
+      onClick={() => setPlan("annual")}
+    >
+      Annual <span>Save 17%</span>
+    </button>
+  </div>
+);
+
 const SignupPage = () => {
-  const [email, setEmail] = useState("");
   const [plan, setPlan] = useState("monthly");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [openFaq, setOpenFaq] = useState(null);
+  const isAnnual = plan === "annual";
+  const price = isAnnual ? "4.00" : "5";
+  const ctaLabel = isAnnual ? "Become a Member - $50/yr" : "Become a Member - $5/mo";
+  const cardCta = isAnnual ? "Start Annual Plan - $50/yr" : "Start Membership - $5/mo";
 
   const startCheckout = async (event) => {
-    event.preventDefault();
+    event?.preventDefault();
     setIsLoading(true);
     setError("");
 
@@ -673,7 +783,7 @@ const SignupPage = () => {
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, plan })
+        body: JSON.stringify({ plan })
       });
       const payload = await response.json();
       if (!response.ok || !payload.url) throw new Error(payload.error || "Checkout failed");
@@ -685,48 +795,172 @@ const SignupPage = () => {
   };
 
   return (
-    <AuthShell title="Join The Daily Session" eyebrow="Membership">
-      <p className="tds-auth-copy">
-        Unlock the full monthly calendar, filters, class details, and member profile.
-      </p>
-      <form className="tds-auth-form" onSubmit={startCheckout}>
-        <label>
-          Email
-          <input
-            required
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@example.com"
-          />
-        </label>
-        <div className="tds-plan-picker" role="group" aria-label="Membership plan">
-          <button
-            type="button"
-            className={plan === "monthly" ? "is-selected" : ""}
-            onClick={() => setPlan("monthly")}
-          >
-            <span>Monthly</span>
-            <small>Flexible access</small>
-          </button>
-          <button
-            type="button"
-            className={plan === "annual" ? "is-selected" : ""}
-            onClick={() => setPlan("annual")}
-          >
-            <span>Annual</span>
-            <small>Best for regular browsing</small>
-          </button>
+    <main className="tds-join-page">
+      <AppNav />
+      <section className="tds-join-hero">
+        <div className="tds-join-glow" />
+        <div className="tds-join-eyebrow">
+          <span />
+          The Daily Session - Philadelphia
+          <span />
         </div>
-        {error ? <p className="tds-form-error">{error}</p> : null}
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? "Opening Stripe..." : "Continue to Secure Checkout"}
+        <h1>
+          Everything moving
+          <br />
+          in <em>Philadelphia.</em>
+        </h1>
+        <p>
+          One membership. Studio discounts, wellness provider discounts, and access to every class
+          happening in the city - all in one place.
+        </p>
+
+        <PlanToggle plan={plan} setPlan={setPlan} theme="dark" />
+
+        <div className="tds-join-price-band">
+          <strong>${price}</strong>
+          <span>/ month</span>
+        </div>
+        {isAnnual ? <small className="tds-join-billing-note">Billed as $50/year - two months free</small> : null}
+
+        {error ? <p className="tds-join-error">{error}</p> : null}
+        <button type="button" className="tds-join-cta" onClick={startCheckout} disabled={isLoading}>
+          {isLoading ? "Opening Stripe..." : ctaLabel} <span>→</span>
         </button>
-      </form>
-      <button type="button" className="tds-link-button" onClick={() => navigateTo("/login")}>
-        Already joined? Log in
-      </button>
-    </AuthShell>
+        <small className="tds-join-note">Cancel anytime - secure checkout via Stripe</small>
+      </section>
+
+      <section className="tds-join-stats" aria-label="Membership stats">
+        <div>
+          <strong>500+</strong>
+          <span>Classes weekly</span>
+        </div>
+        <div>
+          <strong>50+</strong>
+          <span>Partner studios</span>
+        </div>
+        <div>
+          <strong>10+</strong>
+          <span>Participating providers</span>
+        </div>
+      </section>
+
+      <section className="tds-join-section">
+        <SectionKicker label="Why join" />
+        <h2>
+          Your city, <em>fully unlocked.</em>
+        </h2>
+        <p>
+          The Daily Session is the only guide that covers everything moving in Philadelphia:
+          yoga, dance, ceramics, circus, martial arts, and more.
+        </p>
+        <div className="tds-perk-grid">
+          {membershipPerks.map((perk) => (
+            <article className="tds-perk-card" key={perk.title} style={{ "--accent": perk.color }}>
+              <span className={`tds-perk-icon is-${perk.icon}`} aria-hidden="true" />
+              <h3>{perk.title}</h3>
+              <p>{perk.desc}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="tds-included-section">
+        <div>
+          <SectionKicker label="What is included" />
+          <h2>Everything a Philly mover needs.</h2>
+          <p>
+            From your first class to your hundredth, membership gives you the tools, savings,
+            and discovery to keep moving.
+          </p>
+        </div>
+        <div className="tds-included-list">
+          {membershipChecklist.map(([title, desc]) => (
+            <div className="tds-included-item" key={title}>
+              <span>✓</span>
+              <p>
+                <strong>{title}</strong>
+                {desc}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="tds-pricing-section">
+        <SectionKicker label="Pricing" center />
+        <h2>
+          Simple. <em>Affordable.</em>
+          <br />
+          Worth it.
+        </h2>
+        <PlanToggle plan={plan} setPlan={setPlan} />
+
+        <article className="tds-pricing-card">
+          <header>
+            <span>{isAnnual ? "Annual Membership" : "Monthly Membership"}</span>
+            <h3>{isAnnual ? "Annual" : "Monthly"}</h3>
+            <p>Everything you need to move through Philadelphia</p>
+            <div>
+              <small>$</small>
+              <strong>{price}</strong>
+              <small>/ month</small>
+            </div>
+            {isAnnual ? <p>Billed as $50/year - that is two months free</p> : null}
+          </header>
+          <div>
+            {pricingFeatures.map((feature) => (
+              <p className="tds-price-feature" key={feature}>
+                <span>✓</span>
+                {feature}
+              </p>
+            ))}
+            {error ? <p className="tds-join-error">{error}</p> : null}
+            <button type="button" className="tds-join-cta" onClick={startCheckout} disabled={isLoading}>
+              {isLoading ? "Opening Stripe..." : cardCta} <span>→</span>
+            </button>
+            <small>Secure checkout via Stripe</small>
+          </div>
+        </article>
+      </section>
+
+      <section className="tds-faq-section">
+        <SectionKicker label="FAQ" center />
+        <h2>
+          Common <em>questions.</em>
+        </h2>
+        <div className="tds-faq-list">
+          {membershipFaqs.map(([question, answer], index) => {
+            const isOpen = openFaq === index;
+            return (
+              <article className="tds-faq-item" key={question}>
+                <button type="button" onClick={() => setOpenFaq(isOpen ? null : index)}>
+                  {question}
+                  <span>{isOpen ? "↑" : "↓"}</span>
+                </button>
+                {isOpen ? <p>{answer}</p> : null}
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="tds-bottom-join">
+        <h2>
+          Ready to get off
+          <br />
+          the <em>couch?</em>
+        </h2>
+        <p>Philadelphia is moving. Join the members who are showing up for it.</p>
+        <button type="button" className="tds-join-cta" onClick={startCheckout} disabled={isLoading}>
+          {isLoading ? "Opening Stripe..." : ctaLabel} <span>→</span>
+        </button>
+        <div>
+          <button type="button" onClick={() => setPlan("monthly")}>Monthly - $5/mo</button>
+          <span>|</span>
+          <button type="button" onClick={() => setPlan("annual")}>Annual - $50/yr</button>
+        </div>
+      </section>
+    </main>
   );
 };
 
