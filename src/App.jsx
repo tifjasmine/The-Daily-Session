@@ -434,38 +434,67 @@ const HeaderLogo = () => (
   </button>
 );
 
-const AppNav = ({ member, onLogout }) => (
-  <nav className="tds-nav" aria-label="Main navigation">
-    <HeaderLogo />
-    <div>
-      <button type="button" onClick={() => navigateTo("/")}>
-        Home
-      </button>
-      <button type="button" onClick={() => navigateTo("/calendar")}>
-        Calendar
-      </button>
-      {member ? (
-        <>
-          <button type="button" onClick={() => navigateTo("/profile")}>
-            Profile
+const AppNav = ({ member, onLogout }) => {
+  const [isJoinOpen, setIsJoinOpen] = useState(false);
+
+  const goTo = (target) => {
+    setIsJoinOpen(false);
+    navigateTo(target);
+  };
+
+  return (
+    <nav className="tds-nav" aria-label="Main navigation">
+      <HeaderLogo />
+      <div>
+        <button type="button" onClick={() => goTo("/")}>
+          Home
+        </button>
+        <button type="button" onClick={() => goTo("/calendar")}>
+          Calendar
+        </button>
+        <div className="tds-nav-menu">
+          <button
+            type="button"
+            className="tds-nav-primary"
+            aria-expanded={isJoinOpen}
+            aria-haspopup="menu"
+            onClick={() => setIsJoinOpen((current) => !current)}
+          >
+            Join Us
+            <span aria-hidden="true">⌄</span>
           </button>
-          <button type="button" onClick={onLogout}>
-            Log Out
-          </button>
-        </>
-      ) : (
-        <>
-          <button type="button" onClick={() => navigateTo("/login")}>
+          {isJoinOpen ? (
+            <div className="tds-nav-dropdown" role="menu">
+              <button type="button" role="menuitem" onClick={() => goTo("/signup")}>
+                Students
+              </button>
+              <button type="button" role="menuitem" onClick={() => goTo("/business")}>
+                Businesses
+              </button>
+              <button type="button" role="menuitem" onClick={() => goTo("/providers")}>
+                Providers
+              </button>
+            </div>
+          ) : null}
+        </div>
+        {member ? (
+          <>
+            <button type="button" onClick={() => goTo("/profile")}>
+              Profile
+            </button>
+            <button type="button" onClick={onLogout}>
+              Log Out
+            </button>
+          </>
+        ) : (
+          <button type="button" onClick={() => goTo("/login")}>
             Log In
           </button>
-          <button type="button" className="tds-nav-primary" onClick={() => navigateTo("/signup")}>
-            Join
-          </button>
-        </>
-      )}
-    </div>
-  </nav>
-);
+        )}
+      </div>
+    </nav>
+  );
+};
 
 const AuthShell = ({ title, eyebrow, children }) => (
   <main className="tds-auth-page">
@@ -657,6 +686,402 @@ const CreateAccountPage = ({ onMemberChange, onSessionChange }) => {
     </AuthShell>
   );
 };
+
+const businessNeighborhoods = [
+  "Center City",
+  "Fishtown",
+  "Old City",
+  "Rittenhouse",
+  "South Philly",
+  "Queens Village",
+  "Northern Liberties",
+  "Fairmount",
+  "Manayunk",
+  "West Philadelphia",
+  "East Falls",
+  "Cherry Hill, NJ",
+  "Other"
+];
+
+const businessCategories = [
+  "Mind-Body Practices",
+  "Dance & Movement Arts",
+  "Sports & Fitness",
+  "Acrobatics & Circus Arts",
+  "Creative Arts",
+  "Martial Arts",
+  "Recreation",
+  "Food and Drinks",
+  "Wellness & Recovery",
+  "Climbing & Adventure",
+  "Other"
+];
+
+const emptyBusinessForm = {
+  fullName: "",
+  email: "",
+  role: "",
+  businessName: "",
+  address: "",
+  neighborhood: [],
+  website: "",
+  instagram: "",
+  category: [],
+  classDesc: "",
+  avgSize: "",
+  price: "",
+  booking: "",
+  calendar: "",
+  studioPerks: "",
+  signature: "",
+  mediaConsent: false,
+  authConsent: false,
+  listedConsent: false
+};
+
+const BusinessSignupPage = ({ member, onLogout }) => {
+  const [form, setForm] = useState(emptyBusinessForm);
+  const [message, setMessage] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const updateField = (field, value) => {
+    setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const toggleChoice = (field, value) => {
+    setForm((current) => {
+      const values = current[field];
+      const nextValues = values.includes(value)
+        ? values.filter((item) => item !== value)
+        : [...values, value];
+      return { ...current, [field]: nextValues };
+    });
+  };
+
+  const onSubmit = (event) => {
+    event.preventDefault();
+    setMessage("");
+    setIsSubmitted(false);
+
+    if (!form.fullName || !form.email || !form.businessName || !form.address) {
+      setMessage("Add the required contact and studio details, then submit again.");
+      return;
+    }
+
+    if (!form.neighborhood.length || !form.category.length) {
+      setMessage("Choose at least one neighborhood and one category.");
+      return;
+    }
+
+    if (!form.signature || !form.authConsent || !form.listedConsent) {
+      setMessage("Add your signature and the required consents before submitting.");
+      return;
+    }
+
+    setIsSubmitted(true);
+    setMessage("Application ready. Connect this form to Airtable when your business table is set.");
+  };
+
+  return (
+    <main className="tds-business-page">
+      <AppNav member={member} onLogout={onLogout} />
+      <section className="tds-business-hero">
+        <div className="tds-business-hero-copy">
+          <HeaderLogo />
+          <span className="tds-business-eyebrow">For studios and wellness businesses</span>
+          <h1>
+            Get your classes in front of <em>Philadelphia adults</em> who are ready to move.
+          </h1>
+          <p>
+            List your classes for adults 18+ on The Daily Session, from dance, fitness, yoga, art,
+            cooking, and martial arts to other unique experiences. Connect with members already
+            searching for what you offer.
+          </p>
+          <div className="tds-business-pills" aria-label="Business listing highlights">
+            <span>Classes and workshops only</span>
+            <span>18+ audience</span>
+            <span>Member perks welcome</span>
+          </div>
+          <dl className="tds-business-proof">
+            <div>
+              <dt>50+</dt>
+              <dd>studios listed</dd>
+            </div>
+            <div>
+              <dt>100+</dt>
+              <dd>members and growing</dd>
+            </div>
+            <div>
+              <dt>Free</dt>
+              <dd>listing for a limited time</dd>
+            </div>
+          </dl>
+        </div>
+        <aside className="tds-business-card" aria-label="Listing preview">
+          <span>Free listing</span>
+          <h2>Show up where people are already looking.</h2>
+          <p>Send your details once. We review the fit, polish the listing, and keep discovery simple.</p>
+        </aside>
+      </section>
+
+      <section className="tds-business-form-section">
+        <div className="tds-business-form-heading">
+          <span>The Daily Session</span>
+          <h2>Get Your Studio Listed</h2>
+          <p>Join our curated network of Philly studios, providers, and movement spaces.</p>
+        </div>
+
+        <form className="tds-business-form" onSubmit={onSubmit}>
+          <fieldset>
+            <legend>
+              <span>01</span>
+              Contact Information
+            </legend>
+            <div className="tds-business-grid">
+              <label>
+                Full Name *
+                <input
+                  required
+                  value={form.fullName}
+                  onChange={(event) => updateField("fullName", event.target.value)}
+                  placeholder="Tiffany Wright"
+                />
+              </label>
+              <label>
+                Email *
+                <input
+                  required
+                  type="email"
+                  value={form.email}
+                  onChange={(event) => updateField("email", event.target.value)}
+                  placeholder="you@studio.com"
+                />
+              </label>
+            </div>
+            <label>
+              Your Role at the Studio
+              <input
+                value={form.role}
+                onChange={(event) => updateField("role", event.target.value)}
+                placeholder="Owner, manager, instructor..."
+              />
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>
+              <span>02</span>
+              Studio Information
+            </legend>
+            <label>
+              Studio / Business Name *
+              <input
+                required
+                value={form.businessName}
+                onChange={(event) => updateField("businessName", event.target.value)}
+                placeholder="Your studio name"
+              />
+            </label>
+            <label>
+              Studio Address *
+              <input
+                required
+                value={form.address}
+                onChange={(event) => updateField("address", event.target.value)}
+                placeholder="123 Main St, Philadelphia PA"
+              />
+            </label>
+            <div className="tds-business-choice-group">
+              <span>Studio Neighborhood *</span>
+              <div>
+                {businessNeighborhoods.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    className={form.neighborhood.includes(item) ? "is-selected" : ""}
+                    onClick={() => toggleChoice("neighborhood", item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="tds-business-grid">
+              <label>
+                Website
+                <input
+                  value={form.website}
+                  onChange={(event) => updateField("website", event.target.value)}
+                  placeholder="https://"
+                />
+              </label>
+              <label>
+                Instagram / Social
+                <input
+                  value={form.instagram}
+                  onChange={(event) => updateField("instagram", event.target.value)}
+                  placeholder="@yourstudio"
+                />
+              </label>
+            </div>
+            <div className="tds-business-choice-group">
+              <span>Category *</span>
+              <div>
+                {businessCategories.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    className={form.category.includes(item) ? "is-selected" : ""}
+                    onClick={() => toggleChoice("category", item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>
+              <span>03</span>
+              Classes and Schedule
+            </legend>
+            <label>
+              Describe your classes
+              <textarea
+                value={form.classDesc}
+                onChange={(event) => updateField("classDesc", event.target.value)}
+                placeholder="List your main class types..."
+              />
+            </label>
+            <div className="tds-business-grid">
+              <label>
+                Average Class Size
+                <input
+                  value={form.avgSize}
+                  onChange={(event) => updateField("avgSize", event.target.value)}
+                  placeholder="10-15 people"
+                />
+              </label>
+              <label>
+                Price Range per Class
+                <input
+                  value={form.price}
+                  onChange={(event) => updateField("price", event.target.value)}
+                  placeholder="$20-$30 drop-in"
+                />
+              </label>
+            </div>
+            <div className="tds-business-grid">
+              <label>
+                Booking Platform
+                <input
+                  value={form.booking}
+                  onChange={(event) => updateField("booking", event.target.value)}
+                  placeholder="Mindbody, Vagaro, Momence..."
+                />
+              </label>
+              <label>
+                Public Calendar Link
+                <input
+                  value={form.calendar}
+                  onChange={(event) => updateField("calendar", event.target.value)}
+                  placeholder="Schedule URL"
+                />
+              </label>
+            </div>
+            <label>
+              Studio Perks
+              <textarea
+                value={form.studioPerks}
+                onChange={(event) => updateField("studioPerks", event.target.value)}
+                placeholder="Free first class, percent off drop-in, member-only rate..."
+              />
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>
+              <span>04</span>
+              Signature
+            </legend>
+            <label>
+              Typed Signature *
+              <input
+                required
+                value={form.signature}
+                onChange={(event) => updateField("signature", event.target.value)}
+                placeholder="Type your full name"
+              />
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>
+              <span>05</span>
+              Consents
+            </legend>
+            <label className="tds-business-check">
+              <input
+                type="checkbox"
+                checked={form.mediaConsent}
+                onChange={(event) => updateField("mediaConsent", event.target.checked)}
+              />
+              I agree to allow The Daily Session to share media from my studio with appropriate
+              credit and tagging.
+            </label>
+            <label className="tds-business-check">
+              <input
+                required
+                type="checkbox"
+                checked={form.authConsent}
+                onChange={(event) => updateField("authConsent", event.target.checked)}
+              />
+              I confirm that I am authorized to represent this studio.
+            </label>
+            <label className="tds-business-check">
+              <input
+                required
+                type="checkbox"
+                checked={form.listedConsent}
+                onChange={(event) => updateField("listedConsent", event.target.checked)}
+              />
+              I agree to be listed on The Daily Session calendar.
+            </label>
+          </fieldset>
+
+          {message ? (
+            <p className={isSubmitted ? "tds-business-success" : "tds-business-error"}>
+              {message}
+            </p>
+          ) : null}
+          <button type="submit" className="tds-business-submit">
+            Submit Application
+          </button>
+        </form>
+      </section>
+    </main>
+  );
+};
+
+const ProvidersPage = ({ member, onLogout }) => (
+  <main className="tds-business-page">
+    <AppNav member={member} onLogout={onLogout} />
+    <section className="tds-provider-page">
+      <span className="tds-business-eyebrow">For wellness providers</span>
+      <h1>
+        Provider partnerships are <em>coming next.</em>
+      </h1>
+      <p>
+        This page will be for chiropractors, massage therapists, reiki practitioners,
+        naturopaths, and other wellness providers who want to offer member perks.
+      </p>
+      <button type="button" onClick={() => navigateTo("/business")}>
+        List a business for now
+      </button>
+    </section>
+  </main>
+);
 
 const membershipPerks = [
   {
@@ -2047,6 +2472,14 @@ export default function App() {
 
   if (path === "/signup") {
     return <SignupPage />;
+  }
+
+  if (path === "/business") {
+    return <BusinessSignupPage member={member} onLogout={handleLogout} />;
+  }
+
+  if (path === "/providers") {
+    return <ProvidersPage member={member} onLogout={handleLogout} />;
   }
 
   if (path === "/create-account") {

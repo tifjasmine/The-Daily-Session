@@ -1,8 +1,13 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600;1,700&family=DM+Sans:wght@400;500;600;700&display=swap");
+
 :root {
   color: #e8ddd4;
   background: #3d2216;
+  --tds-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --tds-sans: "DM Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "DM Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
 }
 
@@ -13,6 +18,9 @@
 body {
   margin: 0;
   min-width: 320px;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button,
@@ -69,12 +77,50 @@ select {
   cursor: pointer;
   padding: 8px 14px;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .tds-nav button.tds-nav-primary {
   background: #f5e9d8;
   color: #4a2412;
+}
+
+.tds-nav-menu {
+  position: relative;
+}
+
+.tds-nav-menu > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tds-nav-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  width: 190px;
+  border: 1px solid rgba(245, 232, 216, 0.16);
+  border-radius: 14px;
+  background: #f8efe2;
+  padding: 8px;
+  box-shadow: 0 18px 45px rgba(24, 12, 7, 0.26);
+}
+
+.tds-nav .tds-nav-dropdown button:not(.tds-nav-logo) {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 40px;
+  border: 0;
+  border-radius: 10px;
+  color: #3d2216;
+  background: transparent;
+  text-align: left;
+}
+
+.tds-nav .tds-nav-dropdown button:hover {
+  background: rgba(196, 87, 42, 0.12);
 }
 
 .tds-page {
@@ -193,7 +239,7 @@ select {
 }
 
 .tds-brand-name {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: 24px;
   font-weight: 700;
   line-height: 1;
@@ -236,7 +282,7 @@ select {
 h1 {
   margin: 0 0 28px;
   color: #f5e9d8;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: clamp(3rem, 6vw, 4.75rem);
   font-weight: 400;
   line-height: 1.08;
@@ -342,7 +388,7 @@ h1 em {
 
 .tds-schedule-header h2 {
   margin: 0 0 8px;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: 2.7rem;
   font-weight: 400;
   line-height: 1;
@@ -397,7 +443,7 @@ h1 em {
 
 .tds-empty-state strong {
   color: #4a2108;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: 1.5rem;
   font-weight: 400;
 }
@@ -478,7 +524,7 @@ h1 em {
   border-radius: 999px;
   padding: 5px 9px;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -492,7 +538,7 @@ h1 em {
 .tds-session-card h3 {
   margin: 0;
   color: #4a2108;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: 1.65rem;
   font-weight: 400;
   line-height: 1.15;
@@ -520,7 +566,7 @@ h1 em {
   text-align: center;
   text-decoration: none;
   font-size: 0.9rem;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .tds-session-actions button,
@@ -581,12 +627,12 @@ h1 em {
 .tds-modal-header span {
   color: #8e6c58;
   font-size: 0.9rem;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .tds-modal-header h3 {
   margin: 4px 0 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: 2rem;
   font-weight: 400;
   line-height: 1.1;
@@ -627,7 +673,7 @@ h1 em {
   color: #7a4a2a;
   padding: 6px 10px;
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -682,7 +728,7 @@ h1 em {
   gap: 12px;
   color: #c4572a;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.22em;
   text-transform: uppercase;
 }
@@ -709,7 +755,7 @@ h1 em {
 .tds-pricing-section h2,
 .tds-faq-section h2,
 .tds-bottom-join h2 {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-weight: 700;
   letter-spacing: 0;
 }
@@ -773,7 +819,7 @@ h1 em {
   color: #9a7060;
   cursor: pointer;
   padding: 9px 24px;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .tds-join-plan-toggle.is-dark button {
@@ -824,7 +870,7 @@ h1 em {
 
 .tds-join-price-band strong {
   color: #f5e8d8;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: 3.5rem;
   line-height: 1;
 }
@@ -858,7 +904,7 @@ h1 em {
   padding: 16px 38px;
   text-decoration: none;
   font-size: 1.02rem;
-  font-weight: 800;
+  font-weight: 650;
   transition: transform 180ms ease, background 180ms ease;
 }
 
@@ -890,7 +936,7 @@ h1 em {
   z-index: 1;
   margin: 18px auto 0;
   color: #f0a56e;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .tds-join-stats {
@@ -909,7 +955,7 @@ h1 em {
 
 .tds-join-stats strong {
   color: #e8a060;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: 2.6rem;
   line-height: 1;
 }
@@ -917,7 +963,7 @@ h1 em {
 .tds-join-stats span {
   color: rgba(245, 232, 216, 0.48);
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -984,7 +1030,7 @@ h1 em {
 .tds-perk-icon::before {
   color: var(--accent);
   font-size: 1.35rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .tds-perk-icon.is-target::before { content: "◎"; }
@@ -997,7 +1043,7 @@ h1 em {
 .tds-perk-card h3 {
   margin: 0 0 12px;
   color: #3d2314;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: 1.55rem;
   line-height: 1.15;
 }
@@ -1100,7 +1146,7 @@ h1 em {
   color: #f5e8d8;
   padding: 6px 16px;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -1108,7 +1154,7 @@ h1 em {
 .tds-pricing-card h3 {
   margin: 26px 0 8px;
   color: #f5e8d8;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: 2.1rem;
 }
 
@@ -1126,7 +1172,7 @@ h1 em {
 
 .tds-pricing-card header div strong {
   color: #f5e8d8;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: 5rem;
   line-height: 1;
 }
@@ -1159,7 +1205,7 @@ h1 em {
   background: rgba(61, 80, 40, 0.1);
   color: #3d5028;
   font-size: 0.76rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .tds-pricing-card .tds-join-cta {
@@ -1205,7 +1251,7 @@ h1 em {
   cursor: pointer;
   padding: 24px 0;
   text-align: left;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: 1.28rem;
   font-weight: 700;
 }
@@ -1308,7 +1354,7 @@ h1 em {
 .tds-auth-brand-panel span {
   color: #d59d76;
   font-size: 0.75rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
@@ -1317,7 +1363,7 @@ h1 em {
   margin: 0;
   max-width: 360px;
   color: #fff3e4;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: clamp(2.2rem, 4vw, 3.45rem);
   font-weight: 400;
   line-height: 1.04;
@@ -1377,7 +1423,7 @@ h1 em {
   color: #dca376;
   padding: 8px 12px;
   font-size: 0.74rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
@@ -1407,7 +1453,7 @@ h1 em {
 .tds-profile-next span {
   color: #dca376;
   font-size: 0.72rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
@@ -1433,7 +1479,7 @@ h1 em {
 .tds-profile-form-head span {
   color: #c4572a;
   font-size: 0.78rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -1441,7 +1487,7 @@ h1 em {
 .tds-profile-form-head h2 {
   margin: 0;
   color: #3d2314;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 400;
   line-height: 1.05;
@@ -1472,7 +1518,7 @@ h1 em {
   color: #7b3a18;
   padding: 0 12px 0 0;
   font-size: 0.82rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -1488,7 +1534,7 @@ h1 em {
 .tds-profile-card h2,
 .tds-profile-card h3 {
   color: #3d2314;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-weight: 400;
   letter-spacing: 0;
 }
@@ -1506,7 +1552,7 @@ h1 em {
   margin-top: 28px;
   color: #c4784a;
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -1559,7 +1605,7 @@ h1 em {
 }
 
 .tds-plan-picker span {
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .tds-plan-picker small {
@@ -1610,7 +1656,7 @@ h1 em {
   cursor: pointer;
   padding: 14px 18px;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .tds-auth-form button:hover,
@@ -1627,7 +1673,7 @@ h1 em {
   cursor: pointer;
   padding: 0;
   text-align: left;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .tds-form-note {
@@ -1664,7 +1710,7 @@ h1 em {
   margin: 20px 0 6px;
   color: #7b3a18;
   font-size: 1rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -1727,7 +1773,7 @@ h1 em {
   max-width: 860px;
   margin: 18px 0;
   color: #f5e8d8;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: clamp(2.2rem, 5vw, 3.4rem);
   line-height: 1.05;
 }
@@ -1759,7 +1805,7 @@ h1 em {
   color: #f3d4b7;
   padding: 8px 12px;
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -1800,7 +1846,7 @@ h1 em {
   cursor: pointer;
   min-height: 38px;
   padding: 8px 18px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .tds-view-toggle button.is-active {
@@ -1847,7 +1893,7 @@ h1 em {
 .tds-month-head h2,
 .tds-day-head h2 {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: 2rem;
 }
 
@@ -1871,7 +1917,7 @@ h1 em {
   color: #4b2414;
   cursor: pointer;
   padding: 8px 14px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .tds-month-weekdays {
@@ -1886,7 +1932,7 @@ h1 em {
   text-align: center;
   text-transform: uppercase;
   font-size: 0.78rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .tds-month-grid {
@@ -2000,13 +2046,13 @@ h1 em {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .tds-day-card h3 {
   margin: 4px 0;
   color: #3d2314;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: 1.2rem;
 }
 
@@ -2029,7 +2075,7 @@ h1 em {
   text-align: center;
   text-decoration: none;
   padding: 10px;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .tds-day-card button {
@@ -2131,7 +2177,7 @@ h1 em {
   cursor: pointer;
   padding: 8px 14px;
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 650;
 }
 
 .tds-class-hero span,
@@ -2142,7 +2188,7 @@ h1 em {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-size: 0.76rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .tds-class-hero span {
@@ -2155,7 +2201,7 @@ h1 em {
   margin: 8px 0 10px;
   max-width: 820px;
   color: #fff7ef;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--tds-serif);
   font-size: clamp(2.4rem, 6vw, 4.8rem);
   line-height: 1.02;
 }
@@ -2207,7 +2253,7 @@ h1 em {
   color: #6b2d10;
   padding: 8px 12px;
   font-size: 0.82rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .tds-class-content-grid {
@@ -2255,7 +2301,7 @@ h1 em {
   text-align: center;
   text-decoration: none;
   padding: 13px 16px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .tds-class-actions a:first-child,
@@ -2282,6 +2328,384 @@ h1 em {
   font-size: clamp(2.2rem, 5vw, 3.8rem);
 }
 
+.tds-business-page {
+  min-height: 100vh;
+  background: #f5e8d8;
+  color: #3d2216;
+}
+
+.tds-business-page .tds-nav {
+  background: rgba(61, 34, 22, 0.97);
+}
+
+.tds-business-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 48px;
+  align-items: center;
+  min-height: 72vh;
+  padding: 72px clamp(24px, 6vw, 72px);
+  background: #3d2314;
+  color: #f8efe2;
+}
+
+.tds-business-hero .tds-nav-logo {
+  margin-bottom: 48px;
+}
+
+.tds-business-hero .tds-nav-logo img {
+  width: 150px;
+}
+
+.tds-business-eyebrow,
+.tds-business-form-heading > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #e8a060;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.tds-business-eyebrow::before,
+.tds-business-form-heading > span::before {
+  content: "";
+  width: 34px;
+  height: 1px;
+  background: #c4572a;
+}
+
+.tds-business-hero h1,
+.tds-business-form-heading h2,
+.tds-provider-page h1 {
+  max-width: 780px;
+  margin: 24px 0 22px;
+  font-family: var(--tds-serif);
+  font-size: clamp(3rem, 7vw, 6.4rem);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 0.94;
+}
+
+.tds-business-hero h1 em,
+.tds-provider-page h1 em {
+  color: #e8a060;
+  font-style: italic;
+}
+
+.tds-business-hero p {
+  max-width: 720px;
+  margin: 0;
+  color: rgba(248, 239, 226, 0.72);
+  font-size: 1.12rem;
+  line-height: 1.75;
+}
+
+.tds-business-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 34px;
+}
+
+.tds-business-pills span {
+  border: 1px solid rgba(232, 160, 96, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(248, 239, 226, 0.78);
+  padding: 8px 13px;
+  font-size: 0.83rem;
+  font-weight: 500;
+}
+
+.tds-business-pills span::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: #c4572a;
+  vertical-align: middle;
+}
+
+.tds-business-proof {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  margin: 56px 0 0;
+  padding-top: 32px;
+  border-top: 1px solid rgba(245, 232, 216, 0.12);
+}
+
+.tds-business-proof div {
+  margin: 0;
+}
+
+.tds-business-proof dt {
+  margin: 0 0 4px;
+  font-family: var(--tds-serif);
+  color: #f8efe2;
+  font-size: 2.25rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.tds-business-proof dd {
+  margin: 0;
+  color: rgba(248, 239, 226, 0.54);
+  font-size: 0.9rem;
+}
+
+.tds-business-card {
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  min-height: 300px;
+  padding: 28px;
+  box-shadow: inset 0 0 0 1px rgba(245, 232, 216, 0.08);
+}
+
+.tds-business-card span {
+  display: inline-flex;
+  border-radius: 999px;
+  background: rgba(196, 87, 42, 0.18);
+  color: #e8a060;
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.tds-business-card h2 {
+  margin: 74px 0 14px;
+  font-family: var(--tds-serif);
+  font-size: 2.2rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.tds-business-card p {
+  margin: 0;
+  color: rgba(248, 239, 226, 0.64);
+  line-height: 1.7;
+}
+
+.tds-business-form-section {
+  padding: 72px clamp(18px, 6vw, 72px) 96px;
+}
+
+.tds-business-form-heading {
+  width: min(860px, 100%);
+  margin: 0 auto 44px;
+}
+
+.tds-business-form-heading h2 {
+  margin-bottom: 14px;
+  color: #3d2216;
+  font-size: clamp(2.8rem, 6vw, 5.4rem);
+}
+
+.tds-business-form-heading p,
+.tds-provider-page p {
+  max-width: 640px;
+  margin: 0;
+  color: #8c675a;
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+
+.tds-business-form {
+  width: min(860px, 100%);
+  margin: 0 auto;
+}
+
+.tds-business-form fieldset {
+  border: 0;
+  border-top: 1px solid rgba(61, 34, 22, 0.12);
+  margin: 0;
+  padding: 34px 0 28px;
+}
+
+.tds-business-form legend {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  padding: 0 0 20px;
+  font-family: var(--tds-serif);
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #3d2216;
+}
+
+.tds-business-form legend span {
+  font-family: var(--tds-sans);
+  color: #a96e5f;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+}
+
+.tds-business-form label,
+.tds-business-choice-group > span {
+  display: grid;
+  gap: 10px;
+  color: #3d2216;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.tds-business-form input,
+.tds-business-form textarea {
+  width: 100%;
+  border: 1px solid rgba(61, 34, 22, 0.2);
+  border-radius: 12px;
+  background: #fffdf9;
+  color: #3d2216;
+  padding: 16px 18px;
+  font-size: 1rem;
+  font-weight: 400;
+  outline: 0;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.tds-business-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.tds-business-form input:focus,
+.tds-business-form textarea:focus {
+  border-color: #c4572a;
+  box-shadow: 0 0 0 4px rgba(196, 87, 42, 0.12);
+}
+
+.tds-business-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.tds-business-form label + label,
+.tds-business-grid + label,
+.tds-business-choice-group,
+.tds-business-grid,
+.tds-business-choice-group + .tds-business-grid,
+.tds-business-grid + .tds-business-grid {
+  margin-top: 18px;
+}
+
+.tds-business-choice-group > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.tds-business-choice-group button {
+  border: 1px solid rgba(61, 34, 22, 0.14);
+  border-radius: 999px;
+  background: #f8efe2;
+  color: #4a2a1d;
+  cursor: pointer;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.tds-business-choice-group button.is-selected {
+  border-color: #c4572a;
+  background: #c4572a;
+  color: #fffaf1;
+}
+
+.tds-business-check {
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  margin-top: 18px;
+  color: #4a2a1d;
+  line-height: 1.55;
+}
+
+.tds-business-check input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  padding: 0;
+}
+
+.tds-business-submit,
+.tds-provider-page button {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: #3d2216;
+  color: #fffaf1;
+  cursor: pointer;
+  padding: 18px 22px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.tds-business-error,
+.tds-business-success {
+  border-radius: 12px;
+  margin: 8px 0 18px;
+  padding: 14px 16px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.tds-business-error {
+  background: rgba(196, 87, 42, 0.12);
+  color: #8a3417;
+}
+
+.tds-business-success {
+  background: rgba(61, 80, 40, 0.12);
+  color: #3d5028;
+}
+
+.tds-provider-page {
+  min-height: calc(100vh - 70px);
+  padding: 96px clamp(24px, 8vw, 120px);
+  background: #f5e8d8;
+}
+
+.tds-provider-page h1 {
+  color: #3d2216;
+}
+
+.tds-provider-page button {
+  width: auto;
+  margin-top: 34px;
+}
+
+body {
+  font-family: var(--tds-sans);
+}
+
+h1,
+h2,
+h3,
+.tds-brand-name,
+.tds-stat-number,
+.tds-month-header h2,
+.tds-class-hero h1,
+.tds-profile-page h1,
+.tds-auth-content h1,
+.tds-join-hero h1,
+.tds-join-section h2,
+.tds-pricing-card h3,
+.tds-faq-section h2 {
+  letter-spacing: 0;
+}
+
 @media (max-width: 860px) {
   .tds-hero {
     min-height: auto;
@@ -2296,12 +2720,30 @@ h1 em {
   }
 
   .tds-nav {
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
+    padding: 10px 14px;
   }
 
   .tds-nav-logo img {
-    width: 82px;
+    width: 70px;
+  }
+
+  .tds-nav > div {
+    flex: 1;
+    gap: 6px;
+  }
+
+  .tds-nav button:not(.tds-nav-logo) {
+    min-height: 34px;
+    padding: 7px 10px;
+    font-size: 0.78rem;
+  }
+
+  .tds-nav-dropdown {
+    right: auto;
+    left: 0;
+    width: 168px;
   }
 
   .tds-auth-card {
@@ -2414,9 +2856,68 @@ h1 em {
   .tds-class-hero {
     min-height: 320px;
   }
+
+  .tds-business-hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    gap: 28px;
+    padding: 42px 24px 48px;
+  }
+
+  .tds-business-hero .tds-nav-logo {
+    margin-bottom: 32px;
+  }
+
+  .tds-business-hero h1,
+  .tds-business-form-heading h2,
+  .tds-provider-page h1 {
+    font-size: clamp(2.7rem, 13vw, 4.8rem);
+    line-height: 0.98;
+  }
+
+  .tds-business-card {
+    min-height: auto;
+  }
+
+  .tds-business-card h2 {
+    margin-top: 36px;
+  }
+
+  .tds-business-proof {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .tds-business-form-section {
+    padding: 48px 20px 72px;
+  }
+
+  .tds-business-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .tds-business-form input,
+  .tds-business-form textarea {
+    min-height: 52px;
+    font-size: 16px;
+  }
+
+  .tds-provider-page {
+    min-height: calc(100vh - 62px);
+    padding: 64px 24px;
+  }
 }
 
 @media (max-width: 520px) {
+  .tds-nav {
+    gap: 10px;
+  }
+
+  .tds-nav > div {
+    justify-content: flex-start;
+  }
+
   .tds-hero {
     padding: 36px 20px;
   }
