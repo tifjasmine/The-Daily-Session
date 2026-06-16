@@ -282,6 +282,7 @@ const saveClassToAirtable = async ({ session, member, authSession }) => {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       email,
+      memberName: member?.name || authSession?.user?.user_metadata?.name || email,
       session: {
         ...session,
         start: session.start || session.startDate?.toISOString?.() || "",
@@ -754,13 +755,13 @@ const PwaInstallButton = () => {
               <img src="/pwa-icon.svg" alt="" />
               <div>
                 <strong>The Daily Session</strong>
-                <span>www.thedailysession.com</span>
+                <span>thedailysession.com</span>
               </div>
             </div>
             <ol>
               <li>
                 <span>1.</span>
-                <p>Open the browser menu.</p>
+                <p>Open the browser menu from the live site.</p>
               </li>
               <li>
                 <span>2.</span>

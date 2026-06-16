@@ -15,12 +15,9 @@ const getConfig = () => ({
   table: process.env.AIRTABLE_SAVED_CLASSES_TABLE_ID || process.env.AIRTABLE_SAVED_CLASSES_TABLE || DEFAULT_TABLE_NAME,
   userTables: [
     process.env.AIRTABLE_SAVED_CLASSES_USERS_TABLE_ID,
-    DEFAULT_LINKED_USERS_TABLE_ID,
     process.env.AIRTABLE_USERS_TABLE_ID,
     process.env.AIRTABLE_USERS_TABLE,
-    "Users",
-    process.env.AIRTABLE_MEMBERS_TABLE_ID,
-    "Members"
+    DEFAULT_LINKED_USERS_TABLE_ID
   ].filter(Boolean)
 });
 
@@ -130,8 +127,10 @@ const findLinkedUserId = async (email) => {
   const { userTables } = getConfig();
   const formulas = [
     `LOWER({Email})="${escapeFormulaString(normalizedEmail)}"`,
+    `LOWER({Email (from Users)})="${escapeFormulaString(normalizedEmail)}"`,
     `LOWER({Email Address})="${escapeFormulaString(normalizedEmail)}"`,
-    `LOWER({User Email})="${escapeFormulaString(normalizedEmail)}"`
+    `LOWER({User Email})="${escapeFormulaString(normalizedEmail)}"`,
+    `LOWER({YourDaily Email})="${escapeFormulaString(normalizedEmail)}"`
   ];
 
   for (const table of [...new Set(userTables)]) {
@@ -142,8 +141,24 @@ const findLinkedUserId = async (email) => {
         const record = payload.records?.[0];
         if (record?.id) return record.id;
       } catch {
-        // Try the next likely user table/field shape.
+        // Try the next likely email field shape.
       }
+    }
+
+    try {
+      let offset = "";
+      do {
+        const params = new URLSearchParams({ pageSize: "100" });
+        if (offset) params.set("offset", offset);
+        const payload = await fetchTable({ table, params });
+        const match = (payload.records || []).find((record) =>
+          Object.values(record.fields || {}).some((value) => getText(value).toLowerCase().includes(normalizedEmail))
+        );
+        if (match?.id) return match.id;
+        offset = payload.offset || "";
+      } while (offset);
+    } catch {
+      // If this table is inaccessible, fail instead of linking to a different table.
     }
   }
 
@@ -180,7 +195,8 @@ const listSaved = async (email) => {
   return records.map(mapRecord);
 };
 
-const toFields = ({ userId, session }) => ({
+const toFields = ({ userId, memberName, session }) => ({
+  Name: memberName || session.title || "Saved class",
   Users: userId ? [userId] : undefined,
   "Class ID": session.recordId || session.id || "",
   "Snapshot: Class Name": session.title || "",
@@ -213,6 +229,7 @@ export const handler = async (event) => {
     if (event.httpMethod === "POST") {
       const payload = event.body ? JSON.parse(event.body) : {};
       const email = String(payload.email || payload.memberEmail || "").trim();
+      const memberName = String(payload.memberName || payload.name || email).trim();
       const session = payload.session || {};
       const classId = session.recordId || session.id || "";
 
@@ -234,7 +251,7 @@ export const handler = async (event) => {
 
       const created = await airtableRequest({
         method: "POST",
-        body: { fields: compactFields(toFields({ userId, session })), typecast: true }
+        body: { fields: compactFields(toFields({ userId, memberName, session })), typecast: true }
       });
 
       return json(200, { savedClass: mapRecord(created), alreadySaved: false });
