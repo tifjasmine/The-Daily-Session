@@ -1,6 +1,7 @@
 const AIRTABLE_API_URL = "https://api.airtable.com/v0";
 const DEFAULT_BASE_ID = "appQxIhwr00DmKBx5";
 const DEFAULT_TABLE_NAME = "Saved Classes";
+const DEFAULT_LINKED_USERS_TABLE_ID = "tblJAG7I7Fsd5awRo";
 
 const json = (statusCode, body) => ({
   statusCode,
@@ -13,6 +14,8 @@ const getConfig = () => ({
   baseId: process.env.AIRTABLE_BASE_ID || DEFAULT_BASE_ID,
   table: process.env.AIRTABLE_SAVED_CLASSES_TABLE_ID || process.env.AIRTABLE_SAVED_CLASSES_TABLE || DEFAULT_TABLE_NAME,
   userTables: [
+    process.env.AIRTABLE_SAVED_CLASSES_USERS_TABLE_ID,
+    DEFAULT_LINKED_USERS_TABLE_ID,
     process.env.AIRTABLE_USERS_TABLE_ID,
     process.env.AIRTABLE_USERS_TABLE,
     "Users",

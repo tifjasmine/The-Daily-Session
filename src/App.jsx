@@ -543,6 +543,7 @@ const HeaderLogo = () => (
 const AppNav = ({ member, onLogout }) => {
   const [isExploreOpen, setIsExploreOpen] = useState(false);
   const [isJoinOpen, setIsJoinOpen] = useState(false);
+  const navRef = useRef(null);
   const currentPath = window.location.pathname;
   const isActive = (target) =>
     target === "/" ? currentPath === "/" : currentPath === target || currentPath.startsWith(`${target}/`);
@@ -556,8 +557,31 @@ const AppNav = ({ member, onLogout }) => {
     navigateTo(target);
   };
 
+  useEffect(() => {
+    const closeMenus = () => {
+      setIsExploreOpen(false);
+      setIsJoinOpen(false);
+    };
+
+    const onPointerDown = (event) => {
+      if (navRef.current && !navRef.current.contains(event.target)) closeMenus();
+    };
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") closeMenus();
+    };
+
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
   return (
-    <nav className="tds-nav" aria-label="Main navigation">
+    <nav className="tds-nav" aria-label="Main navigation" ref={navRef}>
       <HeaderLogo />
       <div>
         <button type="button" className={navClass("/")} onClick={() => goTo("/")}>
@@ -572,7 +596,10 @@ const AppNav = ({ member, onLogout }) => {
             className={isExploreActive ? "is-active" : undefined}
             aria-expanded={isExploreOpen}
             aria-haspopup="menu"
-            onClick={() => setIsExploreOpen((current) => !current)}
+            onClick={() => {
+              setIsJoinOpen(false);
+              setIsExploreOpen((current) => !current);
+            }}
           >
             Explore
             <span aria-hidden="true">⌄</span>
@@ -614,7 +641,10 @@ const AppNav = ({ member, onLogout }) => {
             className={isJoinActive ? "is-active" : undefined}
             aria-expanded={isJoinOpen}
             aria-haspopup="menu"
-            onClick={() => setIsJoinOpen((current) => !current)}
+            onClick={() => {
+              setIsExploreOpen(false);
+              setIsJoinOpen((current) => !current);
+            }}
           >
             Join Us
             <span aria-hidden="true">⌄</span>
@@ -655,7 +685,7 @@ const AppNav = ({ member, onLogout }) => {
 const PwaInstallButton = () => {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [isInstalled, setIsInstalled] = useState(false);
-  const [message, setMessage] = useState("");
+  const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
     const standalone =
@@ -666,13 +696,12 @@ const PwaInstallButton = () => {
     const handleBeforeInstallPrompt = (event) => {
       event.preventDefault();
       setInstallPrompt(event);
-      setMessage("");
     };
 
     const handleInstalled = () => {
       setInstallPrompt(null);
       setIsInstalled(true);
-      setMessage("The Daily Session is ready on this device.");
+      setShowInstructions(false);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -688,28 +717,63 @@ const PwaInstallButton = () => {
     if (isInstalled) return;
 
     if (!installPrompt) {
-      setMessage("On mobile, open your browser menu and choose Add to Home Screen.");
+      setShowInstructions(true);
       return;
     }
 
     installPrompt.prompt();
-    const choice = await installPrompt.userChoice;
+    await installPrompt.userChoice;
     setInstallPrompt(null);
-
-    setMessage(
-      choice.outcome === "accepted"
-        ? "The Daily Session is installing now."
-        : "You can install it anytime from this button."
-    );
   };
 
   return (
     <div className="tds-install-app" aria-label="Install The Daily Session app">
-      <button type="button" className="tds-install-button" onClick={handleInstall} disabled={isInstalled}>
-        <span>{isInstalled ? "App Installed" : "Download App"}</span>
-        <span aria-hidden="true">Install</span>
+      <button type="button" className="tds-install-badge" onClick={handleInstall} disabled={isInstalled}>
+        <span>{isInstalled ? "App installed" : "Click to download app!"}</span>
+        <img src="/pwa-icon.svg" alt="" />
       </button>
-      <p>{message || "Add The Daily Session to your phone or desktop for faster access."}</p>
+      {showInstructions ? (
+        <div className="tds-install-modal-backdrop" onClick={() => setShowInstructions(false)}>
+          <section
+            className="tds-install-modal"
+            aria-labelledby="tds-install-title"
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="tds-install-close"
+              onClick={() => setShowInstructions(false)}
+              aria-label="Close install instructions"
+            >
+              x
+            </button>
+            <h2 id="tds-install-title">Install the app</h2>
+            <div className="tds-install-modal-app">
+              <img src="/pwa-icon.svg" alt="" />
+              <div>
+                <strong>The Daily Session</strong>
+                <span>www.thedailysession.com</span>
+              </div>
+            </div>
+            <ol>
+              <li>
+                <span>1.</span>
+                <p>Open the browser menu.</p>
+              </li>
+              <li>
+                <span>2.</span>
+                <p>Tap Share or View more.</p>
+              </li>
+              <li>
+                <span>3.</span>
+                <p>Select Add to Home Screen.</p>
+              </li>
+            </ol>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 };
