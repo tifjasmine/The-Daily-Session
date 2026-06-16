@@ -717,6 +717,86 @@ const businessCategories = [
   "Other"
 ];
 
+const providerTypes = [
+  "Chiropractic & Structural Care",
+  "Naturopathic & Alternative Care",
+  "Massage & Bodywork",
+  "Reiki & Energy Healing",
+  "Somatic & Mind-Body",
+  "Spa & Wellness",
+  "Other"
+];
+
+const providerServices = [
+  "Chiropractic Care",
+  "Coaching & Workshops",
+  "Massage & Bodywork",
+  "Meditation & Mindfulness",
+  "Naturopathic Care",
+  "Reiki & Energy Healing",
+  "Somatic Therapy",
+  "Yoga & Movement",
+  "Other"
+];
+
+const providerNeighborhoods = [
+  "Center City",
+  "Rittenhouse Square",
+  "Fishtown",
+  "Northern Liberties",
+  "North Philadelphia",
+  "West Philadelphia",
+  "South Philadelphia",
+  "Old City",
+  "Kensington",
+  "Germantown",
+  "Manayunk",
+  "East Passyunk",
+  "Fairmount",
+  "Washington Square West",
+  "Graduate Hospital",
+  "All of Philadelphia / Multiple Areas",
+  "Not listed"
+];
+
+const insuranceOptions = [
+  "Aetna",
+  "Cigna",
+  "Horizon",
+  "Independence Blue Cross",
+  "United Healthcare",
+  "Other"
+];
+
+const paymentOptions = [
+  "Cash",
+  "Credit Card",
+  "Venmo",
+  "Zelle",
+  "CashApp",
+  "Apple Pay",
+  "HSA/FSA",
+  "Insurance"
+];
+
+const discountOptions = [
+  "$20 credit",
+  "$30 credit",
+  "Free first session",
+  "10% off",
+  "15% off",
+  "Custom"
+];
+
+const heardOptions = [
+  "Instagram",
+  "Word of mouth",
+  "Google search",
+  "Another studio or provider",
+  "TDS member referral",
+  "Other"
+];
+
 const emptyBusinessForm = {
   fullName: "",
   email: "",
@@ -737,6 +817,33 @@ const emptyBusinessForm = {
   mediaConsent: false,
   authConsent: false,
   listedConsent: false
+};
+
+const emptyProviderForm = {
+  practitionerName: "",
+  email: "",
+  phone: "",
+  website: "",
+  businessName: "",
+  instagram: "",
+  neighborhood: "",
+  address: "",
+  hours: "",
+  aboutBusiness: "",
+  aboutPractitioner: "",
+  providerType: "",
+  services: [],
+  serviceDetails: "",
+  acceptsInsurance: "",
+  insurances: [],
+  paymentOptions: [],
+  bookingLink: "",
+  memberDiscount: "",
+  photoName: "",
+  signature: "",
+  heardAbout: "",
+  notes: "",
+  agree: false
 };
 
 const BusinessSignupPage = ({ member, onLogout }) => {
@@ -1064,24 +1171,434 @@ const BusinessSignupPage = ({ member, onLogout }) => {
   );
 };
 
-const ProvidersPage = ({ member, onLogout }) => (
-  <main className="tds-business-page">
-    <AppNav member={member} onLogout={onLogout} />
-    <section className="tds-provider-page">
-      <span className="tds-business-eyebrow">For wellness providers</span>
-      <h1>
-        Provider partnerships are <em>coming next.</em>
-      </h1>
-      <p>
-        This page will be for chiropractors, massage therapists, reiki practitioners,
-        naturopaths, and other wellness providers who want to offer member perks.
-      </p>
-      <button type="button" onClick={() => navigateTo("/business")}>
-        List a business for now
-      </button>
-    </section>
-  </main>
-);
+const ProvidersPage = ({ member, onLogout }) => {
+  const [form, setForm] = useState(emptyProviderForm);
+  const [message, setMessage] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const updateField = (field, value) => {
+    setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const toggleChoice = (field, value) => {
+    setForm((current) => {
+      const values = current[field];
+      const nextValues = values.includes(value)
+        ? values.filter((item) => item !== value)
+        : [...values, value];
+      return { ...current, [field]: nextValues };
+    });
+  };
+
+  const onSubmit = (event) => {
+    event.preventDefault();
+    setMessage("");
+    setIsSubmitted(false);
+
+    const requiredText = [
+      "practitionerName",
+      "email",
+      "phone",
+      "website",
+      "businessName",
+      "address",
+      "hours",
+      "aboutBusiness",
+      "serviceDetails",
+      "bookingLink",
+      "signature"
+    ];
+
+    if (requiredText.some((field) => !form[field])) {
+      setMessage("Complete the required fields marked with an asterisk before submitting.");
+      return;
+    }
+
+    if (
+      !form.neighborhood ||
+      !form.providerType ||
+      !form.services.length ||
+      !form.acceptsInsurance ||
+      !form.paymentOptions.length ||
+      !form.memberDiscount ||
+      !form.photoName ||
+      !form.heardAbout ||
+      !form.agree
+    ) {
+      setMessage("Choose the required dropdowns, services, payment options, photo, and agreement.");
+      return;
+    }
+
+    if (form.acceptsInsurance === "Yes" && !form.insurances.length) {
+      setMessage("Select at least one insurance option, or change insurance to no.");
+      return;
+    }
+
+    setIsSubmitted(true);
+    setMessage(
+      "Application received. Connect this form to Airtable when your provider table is ready."
+    );
+  };
+
+  return (
+    <main className="tds-provider-application-page">
+      <AppNav member={member} onLogout={onLogout} />
+      <section className="tds-provider-hero">
+        <div>
+          <span className="tds-provider-eyebrow">Provider Application</span>
+          <h1>
+            Join our network of <em>Philadelphia</em> wellness providers.
+          </h1>
+          <p>
+            The Daily Session connects adult members with trusted local wellness professionals.
+            Apply below to be considered for our curated provider directory.
+          </p>
+          <div className="tds-provider-chip-row">
+            {[
+              "Massage and Bodywork",
+              "Physical Therapy",
+              "Chiropractic Care",
+              "Acupuncture",
+              "Somatic Therapy",
+              "Reiki",
+              "Naturopathic Medicine",
+              "And more"
+            ].map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+          <dl className="tds-provider-proof">
+            <div>
+              <dt>100+</dt>
+              <dd>active members</dd>
+            </div>
+            <div>
+              <dt>Discounts</dt>
+              <dd>for new client visits</dd>
+            </div>
+            <div>
+              <dt>Curated</dt>
+              <dd>Every provider is reviewed and approved by our team.</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <section className="tds-provider-form-wrap">
+        <form className="tds-provider-form" onSubmit={onSubmit}>
+          <fieldset>
+            <legend>01 — Contact Information</legend>
+            <div className="tds-provider-grid">
+              <label>
+                Practitioner Name *
+                <input
+                  required
+                  value={form.practitionerName}
+                  onChange={(event) => updateField("practitionerName", event.target.value)}
+                  placeholder="Your Name"
+                />
+              </label>
+              <label>
+                Email address *
+                <input
+                  required
+                  type="email"
+                  value={form.email}
+                  onChange={(event) => updateField("email", event.target.value)}
+                  placeholder="name@yourpractice.com"
+                />
+              </label>
+              <label>
+                Phone number *
+                <input
+                  required
+                  type="tel"
+                  value={form.phone}
+                  onChange={(event) => updateField("phone", event.target.value)}
+                  placeholder="(215) 000-0000"
+                />
+              </label>
+              <label>
+                Website *
+                <input
+                  required
+                  value={form.website}
+                  onChange={(event) => updateField("website", event.target.value)}
+                  placeholder="https://yourpractice.com"
+                />
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>02 — Business Details</legend>
+            <div className="tds-provider-grid">
+              <label>
+                Business or practice name *
+                <input
+                  required
+                  value={form.businessName}
+                  onChange={(event) => updateField("businessName", event.target.value)}
+                  placeholder="The Best Wellness Studio"
+                />
+              </label>
+              <label>
+                Instagram handle
+                <input
+                  value={form.instagram}
+                  onChange={(event) => updateField("instagram", event.target.value)}
+                  placeholder="@yourpractice"
+                />
+              </label>
+              <label>
+                Philadelphia neighborhood *
+                <select
+                  required
+                  value={form.neighborhood}
+                  onChange={(event) => updateField("neighborhood", event.target.value)}
+                >
+                  <option value="">Select neighborhood</option>
+                  {providerNeighborhoods.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="tds-provider-grid">
+              <label>
+                Address *
+                <textarea
+                  required
+                  value={form.address}
+                  onChange={(event) => updateField("address", event.target.value)}
+                  placeholder="123 Main St, Philadelphia, PA 19103"
+                />
+              </label>
+              <label>
+                Hours / Availability *
+                <textarea
+                  required
+                  value={form.hours}
+                  onChange={(event) => updateField("hours", event.target.value)}
+                  placeholder="Mon-Fri 9am-5pm, Sat 10am-2pm"
+                />
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>03 — Services</legend>
+            <label>
+              Tell us about your practice *
+              <textarea
+                required
+                value={form.aboutBusiness}
+                onChange={(event) => updateField("aboutBusiness", event.target.value)}
+                placeholder="Tell us about your business, who you work with, and what makes your approach unique..."
+              />
+            </label>
+            <label>
+              Tell us about yourself
+              <textarea
+                value={form.aboutPractitioner}
+                onChange={(event) => updateField("aboutPractitioner", event.target.value)}
+                placeholder="Share a little about you, your background, and your approach..."
+              />
+            </label>
+            <div className="tds-provider-grid is-compact">
+              <label>
+                Provider Type *
+                <select
+                  required
+                  value={form.providerType}
+                  onChange={(event) => updateField("providerType", event.target.value)}
+                >
+                  <option value="">Select provider type</option>
+                  {providerTypes.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Do you accept insurance? *
+                <select
+                  required
+                  value={form.acceptsInsurance}
+                  onChange={(event) => updateField("acceptsInsurance", event.target.value)}
+                >
+                  <option value="">Select an option</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </label>
+            </div>
+            <div className="tds-provider-choice-group">
+              <span>Services offered *</span>
+              <small>Select all that apply.</small>
+              <div>
+                {providerServices.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    className={form.services.includes(item) ? "is-selected" : ""}
+                    onClick={() => toggleChoice("services", item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <label>
+              About your services *
+              <textarea
+                required
+                value={form.serviceDetails}
+                onChange={(event) => updateField("serviceDetails", event.target.value)}
+                placeholder="Describe the specific services you offer..."
+              />
+            </label>
+            {form.acceptsInsurance === "Yes" ? (
+              <div className="tds-provider-choice-group">
+                <span>Insurance accepted *</span>
+                <div>
+                  {insuranceOptions.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={form.insurances.includes(item) ? "is-selected" : ""}
+                      onClick={() => toggleChoice("insurances", item)}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            <div className="tds-provider-choice-group">
+              <span>Payment options *</span>
+              <small>Select all that apply.</small>
+              <div>
+                {paymentOptions.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    className={form.paymentOptions.includes(item) ? "is-selected" : ""}
+                    onClick={() => toggleChoice("paymentOptions", item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <label>
+              Direct booking link *
+              <input
+                required
+                value={form.bookingLink}
+                onChange={(event) => updateField("bookingLink", event.target.value)}
+                placeholder="https://calendly.com/yourname"
+              />
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>04 — Member Perk</legend>
+            <p>Discounts apply to first session with new clients only.</p>
+            <div className="tds-provider-discount-grid">
+              {discountOptions.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  className={form.memberDiscount === item ? "is-selected" : ""}
+                  onClick={() => updateField("memberDiscount", item)}
+                >
+                  {item}
+                  {item === "Custom" ? <small>please email to discuss</small> : null}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>05 — Uploads</legend>
+            <label>
+              Upload business photo *
+              <input
+                required
+                type="file"
+                accept="image/*"
+                onChange={(event) => updateField("photoName", event.target.files?.[0]?.name || "")}
+              />
+            </label>
+            <label>
+              Typed Signature *
+              <input
+                required
+                value={form.signature}
+                onChange={(event) => updateField("signature", event.target.value)}
+                placeholder="Type your full name"
+              />
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>06 — One Last Thing</legend>
+            <label>
+              How did you hear about us? *
+              <select
+                required
+                value={form.heardAbout}
+                onChange={(event) => updateField("heardAbout", event.target.value)}
+              >
+                <option value="">Select an option</option>
+                {heardOptions.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Anything else you want us to know?
+              <textarea
+                value={form.notes}
+                onChange={(event) => updateField("notes", event.target.value)}
+                placeholder="Share anything else you would like us to know..."
+              />
+            </label>
+          </fieldset>
+
+          <label className="tds-provider-agreement">
+            <input
+              required
+              type="checkbox"
+              checked={form.agree}
+              onChange={(event) => updateField("agree", event.target.checked)}
+            />
+            <span>
+              <strong>I understand this is an application, not instant access.</strong> The Daily
+              Session reviews all provider applications and will reach out within 3 to 5 business
+              days. Acceptance into the network is at our discretion.
+            </span>
+          </label>
+
+          {message ? (
+            <p className={isSubmitted ? "tds-business-success" : "tds-business-error"}>
+              {message}
+            </p>
+          ) : null}
+          <button type="submit" className="tds-provider-submit">
+            Submit My Application
+          </button>
+        </form>
+      </section>
+    </main>
+  );
+};
 
 const membershipPerks = [
   {
