@@ -652,6 +652,68 @@ const AppNav = ({ member, onLogout }) => {
   );
 };
 
+const PwaInstallButton = () => {
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const standalone =
+      window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true;
+
+    setIsInstalled(Boolean(standalone));
+
+    const handleBeforeInstallPrompt = (event) => {
+      event.preventDefault();
+      setInstallPrompt(event);
+      setMessage("");
+    };
+
+    const handleInstalled = () => {
+      setInstallPrompt(null);
+      setIsInstalled(true);
+      setMessage("The Daily Session is ready on this device.");
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleInstalled);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", handleInstalled);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (isInstalled) return;
+
+    if (!installPrompt) {
+      setMessage("On mobile, open your browser menu and choose Add to Home Screen.");
+      return;
+    }
+
+    installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    setInstallPrompt(null);
+
+    setMessage(
+      choice.outcome === "accepted"
+        ? "The Daily Session is installing now."
+        : "You can install it anytime from this button."
+    );
+  };
+
+  return (
+    <div className="tds-install-app" aria-label="Install The Daily Session app">
+      <button type="button" className="tds-install-button" onClick={handleInstall} disabled={isInstalled}>
+        <span>{isInstalled ? "App Installed" : "Download App"}</span>
+        <span aria-hidden="true">Install</span>
+      </button>
+      <p>{message || "Add The Daily Session to your phone or desktop for faster access."}</p>
+    </div>
+  );
+};
+
 const AuthShell = ({ title, eyebrow, children }) => (
   <main className="tds-auth-page">
     <div className="tds-auth-card">
@@ -4225,6 +4287,7 @@ export default function App() {
           </h1>
 
           <p>{content.description}</p>
+          <PwaInstallButton />
         </div>
 
         <aside className="tds-panel" aria-label="Daily session statistics">

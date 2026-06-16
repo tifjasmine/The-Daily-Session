@@ -305,6 +305,64 @@ h1 em {
   line-height: 1.7;
 }
 
+.tds-install-app {
+  width: min(460px, 100%);
+  margin-top: 30px;
+  border: 1px solid rgba(232, 160, 96, 0.2);
+  border-radius: 8px;
+  background: rgba(245, 233, 216, 0.08);
+  padding: 14px;
+}
+
+.tds-install-button {
+  width: 100%;
+  min-height: 54px;
+  border: 0;
+  border-radius: 6px;
+  background: #c4572a;
+  color: #fff8ee;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 18px;
+  font: inherit;
+  font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  transition:
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.tds-install-button:hover:not(:disabled) {
+  background: #dc6631;
+  transform: translateY(-1px);
+}
+
+.tds-install-button:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.tds-install-button span:last-child {
+  border: 1px solid rgba(255, 248, 238, 0.4);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.tds-install-app p {
+  max-width: none;
+  margin: 10px 2px 0;
+  color: rgba(245, 233, 216, 0.72);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
 .tds-panel {
   width: min(360px, 100%);
   flex: 0 0 auto;
