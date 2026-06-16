@@ -37,10 +37,10 @@ select {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
+  gap: 24px;
   border-bottom: 1px solid rgba(245, 232, 216, 0.12);
   background: rgba(61, 34, 22, 0.94);
-  padding: 12px 24px;
+  padding: 16px clamp(18px, 4vw, 52px);
   backdrop-filter: blur(10px);
 }
 
@@ -51,38 +51,39 @@ select {
   background: transparent;
   color: #f5e9d8;
   cursor: pointer;
-  padding: 0;
-}
-
-.tds-nav-logo img {
-  display: block;
-  width: 96px;
-  height: auto;
+  font-family: var(--tds-serif);
+  font-size: clamp(1.25rem, 2vw, 1.55rem);
+  font-weight: 600;
+  letter-spacing: 0;
+  padding: 2px 0;
+  white-space: nowrap;
 }
 
 .tds-nav > div {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 22px;
   flex-wrap: wrap;
   justify-content: flex-end;
 }
 
 .tds-nav button:not(.tds-nav-logo) {
-  min-height: 38px;
-  border: 1px solid rgba(245, 232, 216, 0.16);
-  border-radius: 999px;
+  min-height: auto;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
   background: transparent;
-  color: #f5e9d8;
+  color: rgba(245, 232, 216, 0.76);
   cursor: pointer;
-  padding: 8px 14px;
-  font-size: 0.88rem;
-  font-weight: 600;
+  padding: 8px 0;
+  font-size: 0.92rem;
+  font-weight: 500;
 }
 
-.tds-nav button.tds-nav-primary {
-  background: #f5e9d8;
-  color: #4a2412;
+.tds-nav button:not(.tds-nav-logo):hover,
+.tds-nav button:not(.tds-nav-logo).is-active {
+  border-bottom-color: #e8a060;
+  color: #fff7ef;
 }
 
 .tds-nav-menu {
@@ -97,12 +98,12 @@ select {
 
 .tds-nav-dropdown {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 12px);
   right: 0;
   z-index: 60;
-  width: 190px;
-  border: 1px solid rgba(245, 232, 216, 0.16);
-  border-radius: 14px;
+  width: 180px;
+  border: 1px solid rgba(61, 34, 22, 0.1);
+  border-radius: 8px;
   background: #f8efe2;
   padding: 8px;
   box-shadow: 0 18px 45px rgba(24, 12, 7, 0.26);
@@ -113,7 +114,8 @@ select {
   width: 100%;
   min-height: 40px;
   border: 0;
-  border-radius: 10px;
+  border-bottom: 0;
+  border-radius: 6px;
   color: #3d2216;
   background: transparent;
   text-align: left;
@@ -3010,7 +3012,7 @@ h1 em {
 .tds-companies-hero {
   background: #3d2314;
   color: #fff7ef;
-  padding: 78px clamp(24px, 8vw, 140px) 72px;
+  padding: 68px clamp(24px, 8vw, 140px) 66px;
 }
 
 .tds-companies-hero span {
@@ -3024,9 +3026,9 @@ h1 em {
 .tds-companies-hero h1 {
   margin: 24px 0 18px;
   font-family: var(--tds-serif);
-  font-size: clamp(4rem, 8vw, 7.6rem);
-  font-weight: 600;
-  line-height: 0.94;
+  font-size: clamp(3.1rem, 6vw, 5.3rem);
+  font-weight: 500;
+  line-height: 1;
 }
 
 .tds-companies-hero p {
@@ -3188,9 +3190,9 @@ h1 em {
   margin: 14px 0 8px;
   color: #3d2314;
   font-family: var(--tds-serif);
-  font-size: 2rem;
-  font-weight: 600;
-  line-height: 1.05;
+  font-size: 1.72rem;
+  font-weight: 500;
+  line-height: 1.1;
 }
 
 .tds-company-body p {
@@ -3263,9 +3265,9 @@ h1 em {
   max-width: 800px;
   margin: 22px 0;
   font-family: var(--tds-serif);
-  font-size: clamp(4rem, 9vw, 7rem);
-  font-weight: 600;
-  line-height: 0.94;
+  font-size: clamp(2.8rem, 6vw, 4.9rem);
+  font-weight: 500;
+  line-height: 1.02;
 }
 
 .tds-company-detail-hero p {
@@ -3309,8 +3311,8 @@ h1 em {
   margin: 0 0 24px;
   color: #3d2314;
   font-family: var(--tds-serif);
-  font-size: clamp(2.6rem, 5vw, 4rem);
-  font-weight: 600;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 500;
 }
 
 .tds-company-detail-card p,
@@ -3318,8 +3320,8 @@ h1 em {
 .tds-company-info-card p,
 .tds-company-info-card a {
   color: #7b5b46;
-  font-size: 1.1rem;
-  line-height: 1.85;
+  font-size: 1rem;
+  line-height: 1.72;
 }
 
 .tds-company-detail-card ul {
@@ -3481,9 +3483,9 @@ h1 em {
 .tds-wellness-steps h2 {
   margin: 22px 0 22px;
   font-family: var(--tds-serif);
-  font-size: clamp(3.5rem, 7vw, 6rem);
-  font-weight: 600;
-  line-height: 0.98;
+  font-size: clamp(2.8rem, 5.8vw, 4.9rem);
+  font-weight: 500;
+  line-height: 1.02;
 }
 
 .tds-wellness-hero p {
@@ -3506,7 +3508,7 @@ h1 em {
 
 .tds-wellness-steps h2 {
   color: #3d2314;
-  font-size: clamp(2.4rem, 5vw, 4rem);
+  font-size: clamp(2rem, 4vw, 3rem);
 }
 
 .tds-wellness-steps > div {
@@ -3674,9 +3676,9 @@ h1 em {
   margin: 10px 0 8px;
   color: #3d2314;
   font-family: var(--tds-serif);
-  font-size: 1.45rem;
-  font-weight: 650;
-  line-height: 1.08;
+  font-size: 1.32rem;
+  font-weight: 500;
+  line-height: 1.12;
 }
 
 .tds-provider-card p {
@@ -3698,12 +3700,12 @@ h1 em {
 
 .tds-provider-detail-hero {
   position: relative;
-  min-height: 520px;
+  min-height: 470px;
   background-color: #3d2314;
   background-position: center;
   background-size: cover;
   color: #fff7ef;
-  padding: 76px clamp(24px, 10vw, 150px);
+  padding: 62px clamp(24px, 8vw, 126px);
 }
 
 .tds-provider-detail-hero::before {
@@ -3725,19 +3727,19 @@ h1 em {
   color: rgba(245, 232, 216, 0.62);
   cursor: pointer;
   font-weight: 600;
-  margin-bottom: 52px;
+  margin-bottom: 36px;
 }
 
 .tds-provider-detail-hero > div {
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr) 420px;
-  gap: 34px;
+  grid-template-columns: 124px minmax(0, 1fr) minmax(220px, 320px);
+  gap: 28px;
   align-items: center;
 }
 
 .tds-provider-detail-thumb {
-  width: 150px;
-  height: 150px;
+  width: 124px;
+  height: 124px;
   border: 3px solid rgba(245, 232, 216, 0.18);
   border-radius: 18px;
   background-color: #2d150b;
@@ -3748,17 +3750,18 @@ h1 em {
 .tds-provider-detail-hero span {
   color: #e8a060;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .tds-provider-detail-hero h1 {
-  margin: 22px 0 16px;
+  margin: 18px 0 14px;
   font-family: var(--tds-serif);
-  font-size: clamp(3rem, 6vw, 5.7rem);
-  font-weight: 650;
-  line-height: 0.98;
+  font-size: clamp(2.4rem, 4.9vw, 4.25rem);
+  font-weight: 500;
+  line-height: 1.04;
+  max-width: 920px;
 }
 
 .tds-provider-detail-hero p {
@@ -3793,7 +3796,7 @@ h1 em {
   border-radius: 10px;
   background: #c4572a;
   color: #fff7ef;
-  padding: 18px;
+  padding: 15px 18px;
   text-align: center;
   text-decoration: none;
   font-weight: 700;
@@ -3807,16 +3810,16 @@ h1 em {
 
 .tds-provider-detail-summary {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
-  gap: 40px;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 28px;
   background: #eadfce;
-  padding: 44px clamp(24px, 10vw, 150px);
+  padding: 38px clamp(24px, 8vw, 126px);
 }
 
 .tds-provider-detail-summary > div,
 .tds-provider-detail-summary aside {
   border-radius: 18px;
-  padding: 30px;
+  padding: 24px;
 }
 
 .tds-provider-detail-summary span,
@@ -3856,21 +3859,22 @@ h1 em {
 
 .tds-provider-detail-content {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
-  gap: 40px;
-  padding: 64px clamp(24px, 10vw, 150px) 86px;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 34px;
+  align-items: start;
+  padding: 56px clamp(24px, 8vw, 126px) 76px;
 }
 
 .tds-provider-detail-content article {
   border-top: 1px solid rgba(61, 34, 22, 0.12);
-  padding: 34px 0;
+  padding: 28px 0;
 }
 
 .tds-provider-detail-content p,
 .tds-provider-detail-content li {
   color: #7b5b46;
-  font-size: 1.2rem;
-  line-height: 1.9;
+  font-size: 1.02rem;
+  line-height: 1.72;
 }
 
 .tds-provider-detail-content ul {
@@ -3882,7 +3886,7 @@ h1 em {
 .tds-provider-benefit-card,
 .tds-provider-details-card {
   border-radius: 18px;
-  padding: 34px;
+  padding: 26px;
 }
 
 .tds-provider-benefit-card {
@@ -3893,7 +3897,9 @@ h1 em {
 .tds-provider-benefit-card h2 {
   margin: 0;
   font-family: var(--tds-serif);
-  font-size: 3.8rem;
+  font-size: clamp(2rem, 3.5vw, 2.8rem);
+  font-weight: 500;
+  line-height: 1.05;
   color: #fff7ef;
 }
 
@@ -3913,8 +3919,8 @@ h1 em {
 
 .tds-provider-details-card div {
   display: grid;
-  grid-template-columns: 130px minmax(0, 1fr);
-  gap: 18px;
+  grid-template-columns: 94px minmax(0, 1fr);
+  gap: 14px;
   border-bottom: 1px solid rgba(61, 34, 22, 0.08);
   padding: 18px 0;
 }
@@ -3981,19 +3987,14 @@ h3,
     padding: 10px 14px;
   }
 
-  .tds-nav-logo img {
-    width: 70px;
-  }
-
   .tds-nav > div {
     flex: 1;
-    gap: 6px;
+    gap: 14px;
   }
 
   .tds-nav button:not(.tds-nav-logo) {
-    min-height: 34px;
-    padding: 7px 10px;
-    font-size: 0.78rem;
+    padding: 7px 0;
+    font-size: 0.82rem;
   }
 
   .tds-nav-dropdown {
@@ -4311,7 +4312,7 @@ h3,
 
 @media (max-width: 520px) {
   .tds-nav {
-    gap: 10px;
+    gap: 14px;
   }
 
   .tds-nav > div {

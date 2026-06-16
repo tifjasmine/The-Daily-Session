@@ -1,6 +1,7 @@
 const AIRTABLE_API_URL = "https://api.airtable.com/v0";
 const DEFAULT_BASE_ID = "appQxIhwr00DmKBx5";
 const DEFAULT_TABLE_ID = "tblGTqTTdAlPPVXm0";
+const DEFAULT_WINDOW_DAYS = "60";
 
 const fieldNames = [
   "Start Time (NEW)",
@@ -117,6 +118,7 @@ export const handler = async () => {
   const baseId = process.env.AIRTABLE_BASE_ID || DEFAULT_BASE_ID;
   const tableId = process.env.AIRTABLE_TABLE_ID || DEFAULT_TABLE_ID;
   const viewId = process.env.AIRTABLE_VIEW_ID || "";
+  const windowDays = process.env.AIRTABLE_SESSION_WINDOW_DAYS || DEFAULT_WINDOW_DAYS;
 
   if (!token) {
     return {
@@ -139,6 +141,10 @@ export const handler = async () => {
 
       if (viewId) params.set("view", viewId);
       fieldNames.forEach((field) => params.append("fields[]", field));
+      params.set(
+        "filterByFormula",
+        `AND(IS_AFTER({Start}, DATEADD(TODAY(), -2, 'days')), IS_BEFORE({Start}, DATEADD(TODAY(), ${windowDays}, 'days')))`
+      );
       params.append("sort[0][field]", "Start");
       params.append("sort[0][direction]", "asc");
       if (offset) params.set("offset", offset);

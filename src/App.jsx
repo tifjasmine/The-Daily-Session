@@ -511,15 +511,20 @@ const loadAuthenticatedMember = async (session) => {
 
 const HeaderLogo = () => (
   <button type="button" className="tds-nav-logo" onClick={() => navigateTo("/")}>
-    <img src="/tds-logo-stacked-light.png" alt="The Daily Session" />
+    The Daily Session
   </button>
 );
 
 const AppNav = ({ member, onLogout }) => {
-  const [isJoinOpen, setIsJoinOpen] = useState(false);
+  const [isExploreOpen, setIsExploreOpen] = useState(false);
+  const currentPath = window.location.pathname;
+  const isActive = (target) =>
+    target === "/" ? currentPath === "/" : currentPath === target || currentPath.startsWith(`${target}/`);
+  const isExploreActive = isActive("/companies") || isActive("/wellness-providers");
+  const navClass = (target) => (isActive(target) ? "is-active" : undefined);
 
   const goTo = (target) => {
-    setIsJoinOpen(false);
+    setIsExploreOpen(false);
     navigateTo(target);
   };
 
@@ -527,46 +532,50 @@ const AppNav = ({ member, onLogout }) => {
     <nav className="tds-nav" aria-label="Main navigation">
       <HeaderLogo />
       <div>
-        <button type="button" onClick={() => goTo("/")}>
+        <button type="button" className={navClass("/")} onClick={() => goTo("/")}>
           Home
         </button>
-        <button type="button" onClick={() => goTo("/calendar")}>
+        <button type="button" className={navClass("/calendar")} onClick={() => goTo("/calendar")}>
           Calendar
         </button>
         <div className="tds-nav-menu">
           <button
             type="button"
-            className="tds-nav-primary"
-            aria-expanded={isJoinOpen}
+            className={isExploreActive ? "is-active" : undefined}
+            aria-expanded={isExploreOpen}
             aria-haspopup="menu"
-            onClick={() => setIsJoinOpen((current) => !current)}
+            onClick={() => setIsExploreOpen((current) => !current)}
           >
-            Join Us
+            Explore
             <span aria-hidden="true">⌄</span>
           </button>
-          {isJoinOpen ? (
+          {isExploreOpen ? (
             <div className="tds-nav-dropdown" role="menu">
-              <button type="button" role="menuitem" onClick={() => goTo("/signup")}>
-                Students
+              <button
+                type="button"
+                role="menuitem"
+                className={navClass("/companies")}
+                onClick={() => goTo("/companies")}
+              >
+                Companies
               </button>
-              <button type="button" role="menuitem" onClick={() => goTo("/business")}>
-                Businesses
-              </button>
-              <button type="button" role="menuitem" onClick={() => goTo("/providers")}>
+              <button
+                type="button"
+                role="menuitem"
+                className={navClass("/wellness-providers")}
+                onClick={() => goTo("/wellness-providers")}
+              >
                 Providers
               </button>
             </div>
           ) : null}
         </div>
+        <button type="button" className={navClass("/signup")} onClick={() => goTo("/signup")}>
+          Join Us
+        </button>
         {member ? (
           <>
-            <button type="button" onClick={() => goTo("/companies")}>
-              Studios
-            </button>
-            <button type="button" onClick={() => goTo("/wellness-providers")}>
-              Providers
-            </button>
-            <button type="button" onClick={() => goTo("/profile")}>
+            <button type="button" className={navClass("/profile")} onClick={() => goTo("/profile")}>
               Profile
             </button>
             <button type="button" onClick={onLogout}>
@@ -2787,7 +2796,7 @@ const ProviderDetailsPage = ({ member, authSession, onLogout, slug }) => {
               <ul>
                 {provider.serviceDetails
                   .split(/\n|,|;/)
-                  .map((item) => item.trim())
+                  .map((item) => item.trim().replace(/^[-–—>→⇒\s]+/, ""))
                   .filter(Boolean)
                   .slice(0, 8)
                   .map((item) => (
@@ -2850,10 +2859,40 @@ const CompaniesPage = ({ member, authSession, activeSessions, onLogout }) => {
   const [activeCategory, setActiveCategory] = useState("All Categories");
   const [perksOnly, setPerksOnly] = useState(false);
   const [visibleCount, setVisibleCount] = useState(12);
+  const [apiPartners, setApiPartners] = useState([]);
+  const [companyStatus, setCompanyStatus] = useState({ loading: true, error: "" });
 
   useEffect(() => {
     setVisibleCount(12);
   }, [search, activeCategory, perksOnly]);
+
+  useEffect(() => {
+    if (!member?.paid || !authSession?.user?.id) return undefined;
+
+    let isMounted = true;
+    fetch("/api/companies")
+      .then((response) => {
+        if (!response.ok) throw new Error("Unable to load studio partners");
+        return response.json();
+      })
+      .then((payload) => {
+        if (!isMounted) return;
+        setApiPartners(Array.isArray(payload.companies) ? payload.companies : []);
+        setCompanyStatus({ loading: false, error: "" });
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        setApiPartners([]);
+        setCompanyStatus({
+          loading: false,
+          error: error instanceof Error ? error.message : "Unable to load studio partners"
+        });
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [member?.paid, authSession?.user?.id]);
 
   if (!member?.paid || !authSession?.user?.id) {
     return (
@@ -2865,7 +2904,7 @@ const CompaniesPage = ({ member, authSession, activeSessions, onLogout }) => {
     );
   }
 
-  const partners = buildStudioPartners(activeSessions);
+  const partners = apiPartners.length ? apiPartners : buildStudioPartners(activeSessions);
   const filtered = partners.filter((partner) => {
     const haystack = `${partner.name} ${partner.neighborhood} ${partner.category} ${partner.subcategory}`.toLowerCase();
     const query = search.trim().toLowerCase();
@@ -2954,8 +2993,12 @@ const CompaniesPage = ({ member, authSession, activeSessions, onLogout }) => {
           </div>
         ) : (
           <div className="tds-empty-state">
-            <strong>No studios match that search</strong>
-            <span>Try another category or clear the search field.</span>
+            <strong>{companyStatus.loading ? "Loading studio partners..." : "No studios match that search"}</strong>
+            <span>
+              {companyStatus.error
+                ? "The studio table is still connecting. Try again in a moment."
+                : "Try another category or clear the search field."}
+            </span>
           </div>
         )}
         {visibleCount < filtered.length ? (
@@ -2973,6 +3016,37 @@ const CompaniesPage = ({ member, authSession, activeSessions, onLogout }) => {
 };
 
 const CompanyDetailsPage = ({ member, authSession, activeSessions, onLogout, slug }) => {
+  const [apiPartners, setApiPartners] = useState([]);
+  const [companyStatus, setCompanyStatus] = useState({ loading: true, error: "" });
+
+  useEffect(() => {
+    if (!member?.paid || !authSession?.user?.id) return undefined;
+
+    let isMounted = true;
+    fetch("/api/companies")
+      .then((response) => {
+        if (!response.ok) throw new Error("Unable to load studio details");
+        return response.json();
+      })
+      .then((payload) => {
+        if (!isMounted) return;
+        setApiPartners(Array.isArray(payload.companies) ? payload.companies : []);
+        setCompanyStatus({ loading: false, error: "" });
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        setApiPartners([]);
+        setCompanyStatus({
+          loading: false,
+          error: error instanceof Error ? error.message : "Unable to load studio details"
+        });
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [member?.paid, authSession?.user?.id]);
+
   if (!member?.paid || !authSession?.user?.id) {
     return (
       <MemberOnlyGate title="Members only studio details">
@@ -2983,15 +3057,18 @@ const CompanyDetailsPage = ({ member, authSession, activeSessions, onLogout, slu
     );
   }
 
-  const partner = buildStudioPartners(activeSessions).find((item) => item.slug === slug);
+  const sessionPartners = buildStudioPartners(activeSessions);
+  const partner =
+    apiPartners.find((item) => item.slug === slug || item.id === slug) ||
+    sessionPartners.find((item) => item.slug === slug);
 
   if (!partner) {
     return (
       <main className="tds-company-detail-page">
         <AppNav member={member} onLogout={onLogout} />
         <section className="tds-class-empty">
-          <h1>Studio not found</h1>
-          <p>That partner may not be in the current Airtable class feed yet.</p>
+          <h1>{companyStatus.loading ? "Loading studio..." : "Studio not found"}</h1>
+          <p>{companyStatus.error || "That partner may not be available in Airtable yet."}</p>
           <button type="button" onClick={() => navigateTo("/companies")}>
             Back to Studio Partners
           </button>
@@ -3000,8 +3077,11 @@ const CompanyDetailsPage = ({ member, authSession, activeSessions, onLogout, slu
     );
   }
 
-  const upcoming = partner.upcoming
+  const upcoming = activeSessions
+    .filter((session) => studioSlug(session.studio) === partner.slug)
+    .concat(partner.upcoming || [])
     .filter((session) => session.startDate.getTime() >= Date.now())
+    .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
     .slice(0, 30);
   const style = getCategoryPillStyle(partner.category);
 
