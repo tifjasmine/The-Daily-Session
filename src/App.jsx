@@ -270,6 +270,31 @@ const navigateTo = (path) => {
   window.dispatchEvent(new PopStateEvent("popstate"));
 };
 
+const getMemberEmail = (member, authSession) =>
+  String(member?.email || authSession?.user?.email || "").trim().toLowerCase();
+
+const saveClassToAirtable = async ({ session, member, authSession }) => {
+  const email = getMemberEmail(member, authSession);
+  if (!email) throw new Error("Log in to save classes.");
+
+  const response = await fetch("/api/saved-classes", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      email,
+      session: {
+        ...session,
+        start: session.start || session.startDate?.toISOString?.() || "",
+        startIso: session.startDate?.toISOString?.() || session.start || ""
+      }
+    })
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.detail || payload.error || "Could not save class.");
+  return payload;
+};
+
 const getSessionDetailPath = (session) => `/class/${encodeURIComponent(session.recordId || session.id)}`;
 
 const normalizeDetailList = (value) =>
@@ -517,14 +542,17 @@ const HeaderLogo = () => (
 
 const AppNav = ({ member, onLogout }) => {
   const [isExploreOpen, setIsExploreOpen] = useState(false);
+  const [isJoinOpen, setIsJoinOpen] = useState(false);
   const currentPath = window.location.pathname;
   const isActive = (target) =>
     target === "/" ? currentPath === "/" : currentPath === target || currentPath.startsWith(`${target}/`);
-  const isExploreActive = isActive("/companies") || isActive("/wellness-providers");
+  const isExploreActive = isActive("/companies") || isActive("/wellness-providers") || isActive("/saved-classes");
+  const isJoinActive = isActive("/signup") || isActive("/business") || isActive("/providers");
   const navClass = (target) => (isActive(target) ? "is-active" : undefined);
 
   const goTo = (target) => {
     setIsExploreOpen(false);
+    setIsJoinOpen(false);
     navigateTo(target);
   };
 
@@ -567,12 +595,44 @@ const AppNav = ({ member, onLogout }) => {
               >
                 Providers
               </button>
+              {member ? (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={navClass("/saved-classes")}
+                  onClick={() => goTo("/saved-classes")}
+                >
+                  Saved Classes
+                </button>
+              ) : null}
             </div>
           ) : null}
         </div>
-        <button type="button" className={navClass("/signup")} onClick={() => goTo("/signup")}>
-          Join Us
-        </button>
+        <div className="tds-nav-menu">
+          <button
+            type="button"
+            className={isJoinActive ? "is-active" : undefined}
+            aria-expanded={isJoinOpen}
+            aria-haspopup="menu"
+            onClick={() => setIsJoinOpen((current) => !current)}
+          >
+            Join Us
+            <span aria-hidden="true">⌄</span>
+          </button>
+          {isJoinOpen ? (
+            <div className="tds-nav-dropdown" role="menu">
+              <button type="button" role="menuitem" className={navClass("/signup")} onClick={() => goTo("/signup")}>
+                Student
+              </button>
+              <button type="button" role="menuitem" className={navClass("/providers")} onClick={() => goTo("/providers")}>
+                Provider
+              </button>
+              <button type="button" role="menuitem" className={navClass("/business")} onClick={() => goTo("/business")}>
+                Company
+              </button>
+            </div>
+          ) : null}
+        </div>
         {member ? (
           <>
             <button type="button" className={navClass("/profile")} onClick={() => goTo("/profile")}>
@@ -2322,6 +2382,26 @@ const DetailStat = ({ label, value }) => {
 };
 
 const ClassDetailsPage = ({ member, authSession, activeSessions, onLogout, classId }) => {
+  const [saveStatus, setSaveStatus] = useState({ saving: false, message: "", error: "" });
+
+  const handleSaveClass = async (session) => {
+    setSaveStatus({ saving: true, message: "", error: "" });
+    try {
+      const payload = await saveClassToAirtable({ session, member, authSession });
+      setSaveStatus({
+        saving: false,
+        message: payload.alreadySaved ? "Already in your saved classes." : "Saved to your classes.",
+        error: ""
+      });
+    } catch (error) {
+      setSaveStatus({
+        saving: false,
+        message: "",
+        error: error instanceof Error ? error.message : "Could not save class."
+      });
+    }
+  };
+
   if (!member?.paid || !authSession?.user?.id) {
     return (
       <AuthShell title="Members only details" eyebrow="Locked">
@@ -2427,6 +2507,11 @@ const ClassDetailsPage = ({ member, authSession, activeSessions, onLogout, class
                 ) : null}
 
                 <div className="tds-class-actions">
+                  <button type="button" onClick={() => handleSaveClass(session)} disabled={saveStatus.saving}>
+                    {saveStatus.saving ? "Saving..." : "Save Class"}
+                  </button>
+                  {saveStatus.message ? <small>{saveStatus.message}</small> : null}
+                  {saveStatus.error ? <small className="tds-error-text">{saveStatus.error}</small> : null}
                   {session.studioSite ? (
                     <a href={session.studioSite} target="_blank" rel="noreferrer">
                       Sign Up for This Class
@@ -2462,16 +2547,154 @@ const MemberOnlyGate = ({ title, children }) => (
   </AuthShell>
 );
 
+const SavedClassesPage = ({ member, authSession, onLogout }) => {
+  const [savedClasses, setSavedClasses] = useState([]);
+  const [status, setStatus] = useState({ loading: true, error: "" });
+  const [filter, setFilter] = useState("upcoming");
+
+  useEffect(() => {
+    if (!member?.paid || !authSession?.user?.id) return undefined;
+
+    const email = getMemberEmail(member, authSession);
+    let isMounted = true;
+    setStatus({ loading: true, error: "" });
+
+    fetch(`/api/saved-classes?email=${encodeURIComponent(email)}`)
+      .then((response) => {
+        if (!response.ok) throw new Error("Unable to load saved classes");
+        return response.json();
+      })
+      .then((payload) => {
+        if (!isMounted) return;
+        setSavedClasses(Array.isArray(payload.savedClasses) ? payload.savedClasses : []);
+        setStatus({ loading: false, error: "" });
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        setStatus({
+          loading: false,
+          error: error instanceof Error ? error.message : "Unable to load saved classes"
+        });
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [member?.paid, authSession?.user?.id, member?.email, authSession?.user?.email]);
+
+  if (!member?.paid || !authSession?.user?.id) {
+    return (
+      <MemberOnlyGate title="Members only saved classes">
+        <p className="tds-auth-copy">Log in with your member password to view your saved classes.</p>
+      </MemberOnlyGate>
+    );
+  }
+
+  const nowMs = Date.now();
+  const withDates = savedClasses.map((item) => ({
+    ...item,
+    startDate: item.start ? new Date(item.start) : null
+  }));
+  const upcoming = withDates.filter((item) => item.startDate && item.startDate.getTime() >= nowMs);
+  const past = withDates.filter((item) => item.startDate && item.startDate.getTime() < nowMs);
+  const visible =
+    filter === "upcoming" ? upcoming : filter === "past" ? past : withDates;
+
+  return (
+    <main className="tds-saved-page">
+      <AppNav member={member} onLogout={onLogout} />
+      <section className="tds-saved-hero">
+        <span>My Classes</span>
+        <h1>Your Saved Classes</h1>
+        <p>Classes you saved for easy access. Sign up directly with the studio when you are ready.</p>
+        <div>
+          <StatsCard label="Total saved" value={savedClasses.length} />
+          <StatsCard label="Upcoming" value={upcoming.length} />
+          <StatsCard label="Past" value={past.length} />
+        </div>
+      </section>
+
+      <nav className="tds-saved-tabs" aria-label="Saved class filters">
+        {[
+          ["upcoming", `Upcoming (${upcoming.length})`],
+          ["past", `Past (${past.length})`],
+          ["all", `All (${savedClasses.length})`]
+        ].map(([key, label]) => (
+          <button
+            type="button"
+            key={key}
+            className={filter === key ? "is-active" : ""}
+            onClick={() => setFilter(key)}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      <section className="tds-saved-list">
+        {status.loading ? (
+          <div className="tds-empty-state">
+            <strong>Finding your saved classes...</strong>
+            <span>The good ones are getting their shoes on.</span>
+          </div>
+        ) : status.error ? (
+          <div className="tds-empty-state">
+            <strong>Saved classes could not load</strong>
+            <span>{status.error}</span>
+          </div>
+        ) : visible.length ? (
+          <div className="tds-saved-grid">
+            {visible.map((item) => (
+              <article className="tds-saved-card" key={item.id}>
+                <div
+                  className="tds-saved-photo"
+                  style={{ backgroundImage: item.photo ? `url(${item.photo})` : "none" }}
+                  aria-hidden="true"
+                >
+                  {item.startDate ? <span>{formatEasternTime(item.startDate)}</span> : null}
+                </div>
+                <div>
+                  {item.category ? <small>{item.category}</small> : null}
+                  <h2>{item.title}</h2>
+                  <p>{item.studio}</p>
+                  {item.startDate ? <strong>{formatSessionDateTime(item)}</strong> : null}
+                  <footer>
+                    {item.signUpLink ? (
+                      <a href={item.signUpLink} target="_blank" rel="noreferrer">
+                        Sign Up
+                      </a>
+                    ) : null}
+                    {item.classId ? (
+                      <button type="button" onClick={() => navigateTo(`/class/${encodeURIComponent(item.classId)}`)}>
+                        View Details
+                      </button>
+                    ) : null}
+                  </footer>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="tds-empty-state">
+            <strong>No saved classes yet</strong>
+            <span>Open a class detail and save it when something catches your eye.</span>
+          </div>
+        )}
+      </section>
+    </main>
+  );
+};
+
 const ProviderDirectoryPage = ({ member, authSession, onLogout }) => {
   const [providers, setProviders] = useState([]);
   const [status, setStatus] = useState({ loading: true, error: "" });
   const [search, setSearch] = useState("");
   const [activeType, setActiveType] = useState("all");
   const [activeNeighborhood, setActiveNeighborhood] = useState("all");
-  const [visibleCount, setVisibleCount] = useState(12);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   useEffect(() => {
-    setVisibleCount(12);
+    setVisibleCount(10);
   }, [search, activeType, activeNeighborhood]);
 
   useEffect(() => {
@@ -2646,7 +2869,7 @@ const ProviderDirectoryPage = ({ member, authSession, onLogout }) => {
           <button
             type="button"
             className="tds-companies-load"
-            onClick={() => setVisibleCount((count) => count + 12)}
+            onClick={() => setVisibleCount((count) => count + 10)}
           >
             Load More Providers
           </button>
@@ -3389,10 +3612,11 @@ const CalendarPage = ({ member, authSession, activeSessions, onLogout }) => {
   );
 };
 
-const ScheduleSection = ({ now, activeSessions, dataStatus }) => {
+const ScheduleSection = ({ now, activeSessions, dataStatus, member, authSession }) => {
   const [activeFilter, setActiveFilter] = useState("all");
   const [visibleCount, setVisibleCount] = useState(10);
   const [modalSessionId, setModalSessionId] = useState(null);
+  const [saveStatus, setSaveStatus] = useState({ saving: false, message: "", error: "" });
 
   useEffect(() => {
     setVisibleCount(10);
@@ -3414,6 +3638,10 @@ const ScheduleSection = ({ now, activeSessions, dataStatus }) => {
       document.body.style.overflow = originalOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
+  }, [modalSessionId]);
+
+  useEffect(() => {
+    setSaveStatus({ saving: false, message: "", error: "" });
   }, [modalSessionId]);
 
   const todayKey = useMemo(() => getEasternDateKey(now), [now]);
@@ -3464,6 +3692,25 @@ const ScheduleSection = ({ now, activeSessions, dataStatus }) => {
   );
 
   const hasMoreToShow = visibleCount < filteredItems.length;
+  const canSaveClasses = Boolean(member?.paid && authSession?.user?.id);
+
+  const handleSaveClass = async (session) => {
+    setSaveStatus({ saving: true, message: "", error: "" });
+    try {
+      const payload = await saveClassToAirtable({ session, member, authSession });
+      setSaveStatus({
+        saving: false,
+        message: payload.alreadySaved ? "Already saved." : "Saved to your classes.",
+        error: ""
+      });
+    } catch (error) {
+      setSaveStatus({
+        saving: false,
+        message: "",
+        error: error instanceof Error ? error.message : "Could not save class."
+      });
+    }
+  };
 
   return (
     <section className="tds-schedule" aria-labelledby="tds-schedule-heading">
@@ -3619,6 +3866,20 @@ const ScheduleSection = ({ now, activeSessions, dataStatus }) => {
                   <a href={selectedSession.studioSite} target="_blank" rel="noreferrer">
                     Sign Up
                   </a>
+                ) : null}
+                {canSaveClasses ? (
+                  <>
+                    <button
+                      type="button"
+                      className="tds-save-class-button"
+                      onClick={() => handleSaveClass(selectedSession)}
+                      disabled={saveStatus.saving}
+                    >
+                      {saveStatus.saving ? "Saving..." : "Save Class"}
+                    </button>
+                    {saveStatus.message ? <small>{saveStatus.message}</small> : null}
+                    {saveStatus.error ? <small className="tds-error-text">{saveStatus.error}</small> : null}
+                  </>
                 ) : null}
               </div>
             </div>
@@ -3877,6 +4138,16 @@ export default function App() {
     );
   }
 
+  if (path === "/saved-classes") {
+    return (
+      <SavedClassesPage
+        member={member}
+        authSession={authSession}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
   if (path.startsWith("/class/") || path === "/class-info") {
     const classId =
       path === "/class-info"
@@ -3980,6 +4251,8 @@ export default function App() {
         now={now}
         activeSessions={activeSessions}
         dataStatus={dataStatus}
+        member={member}
+        authSession={authSession}
       />
     </main>
   );

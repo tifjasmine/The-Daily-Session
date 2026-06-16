@@ -1,6 +1,6 @@
 const AIRTABLE_API_URL = "https://api.airtable.com/v0";
 const DEFAULT_BASE_ID = "appQxIhwr00DmKBx5";
-const DEFAULT_TABLES = ["tblJAG7I7Fsd5awRo", "Studio Info 2", "Studios", "Studio Info"];
+const DEFAULT_TABLES = ["Studio Info 2", "Studio Info", "Studios"];
 
 const getText = (value) => {
   if (value === null || value === undefined) return "";
@@ -51,7 +51,7 @@ const slugify = (value, fallback) =>
 const mapRecord = (record) => {
   const fields = record.fields || {};
   const name = getText(
-    getField(fields, ["Studio/Business Name", "Business Name", "Studio Name", "Name"])
+    getField(fields, ["Studio/Business Name", "Studio Name", "Business Name", "Name"])
   );
   const category = getText(getField(fields, ["Category", "Primary Category"]));
   const subcategories = getAllText(getField(fields, ["Subcategory", "Subcategories", "Class Types"]));
@@ -83,7 +83,7 @@ const mapRecord = (record) => {
 const hasCompanyShape = (record) => {
   const fields = record.fields || {};
   return Boolean(
-    getField(fields, ["Studio/Business Name", "Business Name", "Studio Name", "Name"]) ||
+    getField(fields, ["Studio/Business Name", "Studio Name", "Business Name", "Name"]) ||
       getField(fields, ["SEO:Slug", "Description Short", "Member Perks"])
   );
 };
