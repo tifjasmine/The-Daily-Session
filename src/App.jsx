@@ -563,6 +563,9 @@ const AppNav = ({ member, onLogout }) => {
             <button type="button" onClick={() => goTo("/companies")}>
               Studios
             </button>
+            <button type="button" onClick={() => goTo("/wellness-providers")}>
+              Providers
+            </button>
             <button type="button" onClick={() => goTo("/profile")}>
               Profile
             </button>
@@ -2450,6 +2453,398 @@ const MemberOnlyGate = ({ title, children }) => (
   </AuthShell>
 );
 
+const ProviderDirectoryPage = ({ member, authSession, onLogout }) => {
+  const [providers, setProviders] = useState([]);
+  const [status, setStatus] = useState({ loading: true, error: "" });
+  const [search, setSearch] = useState("");
+  const [activeType, setActiveType] = useState("all");
+  const [activeNeighborhood, setActiveNeighborhood] = useState("all");
+  const [visibleCount, setVisibleCount] = useState(12);
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [search, activeType, activeNeighborhood]);
+
+  useEffect(() => {
+    if (!member?.paid || !authSession?.user?.id) return undefined;
+
+    let isMounted = true;
+    setStatus({ loading: true, error: "" });
+
+    fetch("/api/providers")
+      .then((response) => {
+        if (!response.ok) throw new Error("Unable to load wellness providers");
+        return response.json();
+      })
+      .then((payload) => {
+        if (!isMounted) return;
+        setProviders(Array.isArray(payload.providers) ? payload.providers : []);
+        setStatus({ loading: false, error: "" });
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        setProviders([]);
+        setStatus({
+          loading: false,
+          error: error instanceof Error ? error.message : "Unable to load wellness providers"
+        });
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [member?.paid, authSession?.user?.id]);
+
+  if (!member?.paid || !authSession?.user?.id) {
+    return (
+      <MemberOnlyGate title="Members only wellness providers">
+        <p className="tds-auth-copy">
+          Log in with your member password to browse provider discounts and monthly credit options.
+        </p>
+      </MemberOnlyGate>
+    );
+  }
+
+  const providerTypeOptions = [
+    "all",
+    ...Array.from(new Set(providers.map((provider) => provider.providerType).filter(Boolean))).sort()
+  ];
+  const neighborhoodOptions = [
+    "all",
+    ...Array.from(new Set(providers.map((provider) => provider.neighborhood).filter(Boolean))).sort()
+  ];
+  const filtered = providers.filter((provider) => {
+    const haystack = `${provider.businessName} ${provider.providerType} ${provider.neighborhood} ${(provider.services || []).join(" ")} ${provider.shortDescription}`.toLowerCase();
+    const query = search.trim().toLowerCase();
+    return (
+      (!query || haystack.includes(query)) &&
+      (activeType === "all" || provider.providerType === activeType) &&
+      (activeNeighborhood === "all" || provider.neighborhood === activeNeighborhood)
+    );
+  });
+  const visible = filtered.slice(0, visibleCount);
+
+  return (
+    <main className="tds-wellness-page">
+      <AppNav member={member} onLogout={onLogout} />
+      <section className="tds-wellness-hero">
+        <span>The Daily Session · Membership</span>
+        <h1>Wellness Providers</h1>
+        <p>
+          Your body does a lot for you. This is where you give back: trusted practitioners
+          supporting recovery, alignment, and well-being with personalized member discounts.
+        </p>
+      </section>
+
+      <section className="tds-wellness-steps">
+        <span>How it works</span>
+        <h2>Redeeming your monthly credit</h2>
+        <div>
+          {[
+            ["1", "Browse the Network", "Explore the curated directory of vetted wellness practitioners across the Philadelphia area."],
+            ["2", "Submit Your Request", "Select your provider and submit a redemption request at least 48 hours before your appointment."],
+            ["3", "Attend and Save", "Your provider applies the discount or credit to your bill. One credit may be applied per provider, per month."]
+          ].map(([number, title, text]) => (
+            <article key={number}>
+              <i>{number}</i>
+              <strong>{title}</strong>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+        <footer>
+          <p><strong>Note:</strong> Passes are non-transferable and must be used within 30 days of submission.</p>
+          <p>Questions? Email <a href="mailto:admin@thedailysession.com">admin@thedailysession.com</a></p>
+        </footer>
+      </section>
+
+      <section className="tds-wellness-directory">
+        <input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search providers, services..."
+        />
+        <div className="tds-wellness-filters">
+          <select value={activeType} onChange={(event) => setActiveType(event.target.value)}>
+            {providerTypeOptions.map((item) => (
+              <option key={item} value={item}>
+                {item === "all" ? "Provider Type" : item}
+              </option>
+            ))}
+          </select>
+          <select
+            value={activeNeighborhood}
+            onChange={(event) => setActiveNeighborhood(event.target.value)}
+          >
+            {neighborhoodOptions.map((item) => (
+              <option key={item} value={item}>
+                {item === "all" ? "Neighborhood" : item}
+              </option>
+            ))}
+          </select>
+          <span>{filtered.length} providers</span>
+        </div>
+
+        {status.loading ? (
+          <div className="tds-empty-state">
+            <strong>Gathering provider magic...</strong>
+            <span>Wellness people are loading gently.</span>
+          </div>
+        ) : status.error ? (
+          <div className="tds-empty-state">
+            <strong>Providers could not load</strong>
+            <span>{status.error}</span>
+          </div>
+        ) : visible.length ? (
+          <div className="tds-wellness-grid">
+            {visible.map((provider, index) => (
+              <article className="tds-provider-card" key={provider.id || provider.slug}>
+                <button
+                  type="button"
+                  className="tds-provider-card-photo"
+                  style={{
+                    backgroundColor: ["#1E0E06", "#3A1508", "#1A1830", "#182210", "#201018"][index % 5],
+                    backgroundImage: provider.businessPhoto ? `url(${provider.businessPhoto})` : "none"
+                  }}
+                  onClick={() => navigateTo(`/wellness-providers/${provider.slug || provider.id}`)}
+                  aria-label={`About ${provider.businessName}`}
+                >
+                  <span>Discount</span>
+                  {provider.providerType ? <i>{provider.providerType}</i> : null}
+                </button>
+                <div>
+                  {provider.neighborhood ? <small>{provider.neighborhood}</small> : null}
+                  <h2>{provider.businessName}</h2>
+                  {provider.services?.length ? <p>{provider.services.join(", ")}</p> : null}
+                  {provider.shortDescription ? <p>{shortText(provider.shortDescription, 120)}</p> : null}
+                  <button
+                    type="button"
+                    onClick={() => navigateTo(`/wellness-providers/${provider.slug || provider.id}`)}
+                  >
+                    About Provider
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="tds-empty-state">
+            <strong>No providers match that search</strong>
+            <span>Try clearing a filter or searching a service.</span>
+          </div>
+        )}
+        {visibleCount < filtered.length ? (
+          <button
+            type="button"
+            className="tds-companies-load"
+            onClick={() => setVisibleCount((count) => count + 12)}
+          >
+            Load More Providers
+          </button>
+        ) : null}
+      </section>
+    </main>
+  );
+};
+
+const ProviderDetailsPage = ({ member, authSession, onLogout, slug }) => {
+  const [providers, setProviders] = useState([]);
+  const [status, setStatus] = useState({ loading: true, error: "" });
+
+  useEffect(() => {
+    if (!member?.paid || !authSession?.user?.id) return undefined;
+
+    let isMounted = true;
+    fetch("/api/providers")
+      .then((response) => {
+        if (!response.ok) throw new Error("Unable to load wellness provider");
+        return response.json();
+      })
+      .then((payload) => {
+        if (!isMounted) return;
+        setProviders(Array.isArray(payload.providers) ? payload.providers : []);
+        setStatus({ loading: false, error: "" });
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        setStatus({
+          loading: false,
+          error: error instanceof Error ? error.message : "Unable to load wellness provider"
+        });
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [member?.paid, authSession?.user?.id]);
+
+  if (!member?.paid || !authSession?.user?.id) {
+    return (
+      <MemberOnlyGate title="Members only provider details">
+        <p className="tds-auth-copy">
+          Log in with your member password to view provider credits and booking details.
+        </p>
+      </MemberOnlyGate>
+    );
+  }
+
+  const provider = providers.find((item) => item.slug === slug || item.id === slug);
+
+  if (status.loading) {
+    return (
+      <main className="tds-wellness-page">
+        <AppNav member={member} onLogout={onLogout} />
+        <div className="tds-empty-state">
+          <strong>Loading provider details...</strong>
+          <span>One calm second.</span>
+        </div>
+      </main>
+    );
+  }
+
+  if (status.error || !provider) {
+    return (
+      <main className="tds-wellness-page">
+        <AppNav member={member} onLogout={onLogout} />
+        <div className="tds-class-empty">
+          <h1>Provider not found</h1>
+          <p>{status.error || "That provider is not available in Airtable yet."}</p>
+          <button type="button" onClick={() => navigateTo("/wellness-providers")}>
+            Back to all providers
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  const creditSubject = encodeURIComponent(`Provider credit request: ${provider.businessName}`);
+  const creditBody = encodeURIComponent(
+    `Hi The Daily Session,\n\nI would like to redeem my member credit with ${provider.businessName}.\n\nProvider: ${provider.businessName}\nMember email:\nPreferred appointment date:\n\nThank you!`
+  );
+  const redeemLink = `mailto:admin@thedailysession.com?subject=${creditSubject}&body=${creditBody}`;
+
+  return (
+    <main className="tds-provider-detail-page">
+      <AppNav member={member} onLogout={onLogout} />
+      <section
+        className="tds-provider-detail-hero"
+        style={{ backgroundImage: provider.businessPhoto ? `url(${provider.businessPhoto})` : "none" }}
+      >
+        <button type="button" onClick={() => navigateTo("/wellness-providers")}>
+          ← All Providers
+        </button>
+        <div>
+          <div
+            className="tds-provider-detail-thumb"
+            style={{ backgroundImage: provider.businessPhoto ? `url(${provider.businessPhoto})` : "none" }}
+          />
+          <div>
+            <span>The Daily Session · Wellness Provider</span>
+            <h1>{provider.businessName}</h1>
+            <p>
+              {provider.neighborhood ? <i>{provider.neighborhood}</i> : null}
+              {provider.discount ? <strong>{provider.discount}</strong> : null}
+            </p>
+          </div>
+          <aside>
+            <a href={redeemLink}>Redeem Credit</a>
+            {provider.website ? (
+              <a href={provider.website} target="_blank" rel="noreferrer">
+                Visit Website
+              </a>
+            ) : null}
+          </aside>
+        </div>
+      </section>
+
+      <section className="tds-provider-detail-summary">
+        <div>
+          <span>Provider Type</span>
+          {provider.providerType ? <p>{provider.providerType}</p> : null}
+          <span>Services</span>
+          <div>
+            {(provider.services || []).map((service) => (
+              <i key={service}>{service}</i>
+            ))}
+          </div>
+        </div>
+        <aside>
+          <span>Contact</span>
+          {provider.phone ? <><small>Phone</small><p>{provider.phone}</p></> : null}
+          {provider.email ? <><small>Email</small><p>{provider.email}</p></> : null}
+        </aside>
+      </section>
+
+      <section className="tds-provider-detail-content">
+        <div>
+          <article>
+            <span>About</span>
+            <p>{provider.aboutBusiness || provider.shortDescription || "Provider details are being gathered."}</p>
+          </article>
+          {provider.serviceDetails ? (
+            <article>
+              <span>Service Details</span>
+              <ul>
+                {provider.serviceDetails
+                  .split(/\n|,|;/)
+                  .map((item) => item.trim())
+                  .filter(Boolean)
+                  .slice(0, 8)
+                  .map((item) => (
+                    <li key={item}>→ {item}</li>
+                  ))}
+              </ul>
+            </article>
+          ) : null}
+          {provider.aboutPractitioner ? (
+            <article>
+              <span>About the Practitioner</span>
+              <p>{provider.aboutPractitioner}</p>
+            </article>
+          ) : null}
+        </div>
+        <aside>
+          <article className="tds-provider-benefit-card">
+            <span>Member Benefit</span>
+            <h2>{provider.discount || "$20 off"}</h2>
+            <p>Your monthly member credit applies to your first visit with this provider.</p>
+            <a href={redeemLink}>Redeem Credit</a>
+            {provider.website ? (
+              <a href={provider.website} target="_blank" rel="noreferrer">
+                Visit Website →
+              </a>
+            ) : null}
+            {provider.bookingLink ? (
+              <a href={provider.bookingLink} target="_blank" rel="noreferrer">
+                Booking Link →
+              </a>
+            ) : null}
+          </article>
+          <article className="tds-provider-details-card">
+            <span>Details</span>
+            {[
+              ["Location", provider.address || provider.neighborhood],
+              ["Hours", provider.hours],
+              ["Payment", provider.paymentOptions?.join(", ")],
+              ["Insurance", provider.insurance?.join(", ")]
+            ]
+              .filter(([, value]) => value)
+              .map(([label, value]) => (
+                <div key={label}>
+                  <small>{label}</small>
+                  <p>{value}</p>
+                </div>
+              ))}
+          </article>
+          <button type="button" onClick={() => navigateTo("/wellness-providers")}>
+            ← Back to all providers
+          </button>
+        </aside>
+      </section>
+    </main>
+  );
+};
+
 const CompaniesPage = ({ member, authSession, activeSessions, onLogout }) => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All Categories");
@@ -3359,6 +3754,32 @@ export default function App() {
 
   if (path === "/providers") {
     return <ProvidersPage member={member} onLogout={handleLogout} />;
+  }
+
+  if (path === "/wellness-providers") {
+    return (
+      <ProviderDirectoryPage
+        member={member}
+        authSession={authSession}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  if (path.startsWith("/wellness-providers/") || path === "/providers-details") {
+    const providerSlug =
+      path === "/providers-details"
+        ? new URLSearchParams(window.location.search).get("recordId") || ""
+        : path.replace(/^\/wellness-providers\//, "");
+
+    return (
+      <ProviderDetailsPage
+        member={member}
+        authSession={authSession}
+        onLogout={handleLogout}
+        slug={providerSlug}
+      />
+    );
   }
 
   if (path === "/create-account") {
