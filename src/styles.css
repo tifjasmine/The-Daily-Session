@@ -39,29 +39,17 @@ select {
 .tds-nav-logo {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
   border: 0;
   background: transparent;
   color: #f5e9d8;
   cursor: pointer;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.1rem;
-  font-weight: 700;
+  padding: 0;
 }
 
-.tds-nav-logo .tds-mini-logo {
-  width: 36px;
-  height: 36px;
-  border-radius: 7px;
-}
-
-.tds-nav-logo .tds-mini-logo-rings,
-.tds-nav-logo .tds-mini-logo-top {
-  display: none;
-}
-
-.tds-nav-logo .tds-mini-logo-grid {
-  inset: 8px;
+.tds-nav-logo img {
+  display: block;
+  width: 96px;
+  height: auto;
 }
 
 .tds-nav > div {
@@ -114,8 +102,13 @@ select {
 .tds-brand-lockup {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
   margin-bottom: 32px;
+}
+
+.tds-brand-lockup img {
+  display: block;
+  width: min(240px, 56vw);
+  height: auto;
 }
 
 .tds-mini-logo {
@@ -1108,9 +1101,7 @@ h1 em {
 .tds-page-header-card {
   width: min(1180px, 100%);
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
+  display: block;
   border: 1px solid rgba(245, 232, 216, 0.16);
   border-radius: 18px;
   background: rgba(245, 232, 216, 0.08);
@@ -1137,6 +1128,14 @@ h1 em {
   line-height: 1.65;
 }
 
+.tds-page-header-card .tds-brand-lockup {
+  margin-bottom: 24px;
+}
+
+.tds-page-header-card .tds-brand-lockup img {
+  width: min(190px, 48vw);
+}
+
 .tds-page-header-kicker {
   display: inline-flex;
   border: 1px solid rgba(245, 232, 216, 0.14);
@@ -1148,46 +1147,6 @@ h1 em {
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-}
-
-.tds-page-header-card aside {
-  border-radius: 16px;
-  background: rgba(245, 232, 216, 0.92);
-  padding: 22px;
-}
-
-.tds-page-header-card aside span {
-  color: #9a7060;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.tds-page-header-card aside h2 {
-  margin: 10px 0;
-  color: #3d2314;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.6rem;
-}
-
-.tds-page-header-card aside p {
-  color: #9a7060;
-}
-
-.tds-page-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.tds-page-badges small {
-  border-radius: 999px;
-  background: #fffdf9;
-  color: #4b2414;
-  padding: 10px 14px;
-  font-weight: 900;
 }
 
 .tds-calendar-tools {
@@ -1396,11 +1355,29 @@ h1 em {
   padding: 14px;
 }
 
-.tds-day-card img {
+.tds-day-thumb {
   width: 82px;
   height: 82px;
   border-radius: 8px;
-  object-fit: cover;
+  background-color: #e6d6c7;
+  background-position: center;
+  background-size: cover;
+}
+
+.tds-day-thumb[data-has-photo="false"] {
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(135deg, rgba(196, 87, 42, 0.14), transparent 62%),
+    #eaded0;
+}
+
+.tds-day-thumb[data-has-photo="false"]::after {
+  content: "";
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(61, 35, 20, 0.16);
 }
 
 .tds-day-card span {
@@ -1708,6 +1685,10 @@ h1 em {
     flex-direction: column;
   }
 
+  .tds-nav-logo img {
+    width: 82px;
+  }
+
   .tds-auth-card {
     min-height: auto;
     grid-template-columns: 1fr;
@@ -1759,6 +1740,11 @@ h1 em {
     grid-template-columns: 72px minmax(0, 1fr);
   }
 
+  .tds-day-thumb {
+    width: 72px;
+    height: 72px;
+  }
+
   .tds-day-card > div:last-child {
     grid-column: 1 / -1;
     grid-template-columns: 1fr 1fr;
@@ -1798,8 +1784,11 @@ h1 em {
   }
 
   .tds-brand-lockup {
-    gap: 12px;
     margin-bottom: 28px;
+  }
+
+  .tds-brand-lockup img {
+    width: min(190px, 62vw);
   }
 
   .tds-mini-logo {
@@ -1918,6 +1907,26 @@ h1 em {
     padding: 20px;
   }
 
+  .tds-page-header-card {
+    border-radius: 0;
+    border-inline: 0;
+    padding: 22px;
+  }
+
+  .tds-page-header-card h1 {
+    font-size: 2.55rem;
+  }
+
+  .tds-month-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .tds-month-head h2 {
+    white-space: nowrap;
+    font-size: 2rem;
+  }
+
   .tds-class-detail-shell {
     padding: 14px 14px 36px;
   }
@@ -1948,6 +1957,11 @@ h1 em {
   .tds-month-grid button {
     min-height: 78px;
     padding: 7px;
+  }
+
+  .tds-day-thumb {
+    width: 56px;
+    height: 56px;
   }
 
   .tds-schedule {

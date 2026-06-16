@@ -125,13 +125,7 @@ const MiniCalendarLogo = () => (
 
 const BrandLockup = () => (
   <div className="tds-brand-lockup">
-    <MiniCalendarLogo />
-    <div className="tds-brand-text">
-      <span className="tds-brand-kicker">The</span>
-      <span className="tds-brand-name">Daily Session</span>
-      <span className="tds-brand-line" />
-      <span className="tds-brand-location">Philadelphia</span>
-    </div>
+    <img src="/tds-logo-stacked-light.png" alt="The Daily Session Philadelphia" />
   </div>
 );
 
@@ -436,8 +430,7 @@ const loadAuthenticatedMember = async (session) => {
 
 const HeaderLogo = () => (
   <button type="button" className="tds-nav-logo" onClick={() => navigateTo("/")}>
-    <MiniCalendarLogo />
-    <span>The Daily Session</span>
+    <img src="/tds-logo-stacked-light.png" alt="The Daily Session" />
   </button>
 );
 
@@ -1041,16 +1034,6 @@ const CalendarHero = () => (
           and price - all in one place.
         </p>
       </div>
-      <aside>
-        <span>Inside this page</span>
-        <h2>Find your next class faster</h2>
-        <p>Use filters to narrow options, then switch between grid and list views.</p>
-        <div className="tds-page-badges">
-          <small>Monthly view</small>
-          <small>Philadelphia</small>
-          <small>Updated daily</small>
-        </div>
-      </aside>
     </div>
   </section>
 );
@@ -1238,6 +1221,11 @@ const CalendarPage = ({ member, authSession, activeSessions, onLogout }) => {
 
   const monthDays = getMonthMatrix(calendarMonth);
   const monthLabel = calendarMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const monthClassCount = filtered.filter(
+    (session) =>
+      session.startDate.getFullYear() === calendarMonth.getFullYear() &&
+      session.startDate.getMonth() === calendarMonth.getMonth()
+  ).length;
   const sessionsByDay = filtered.reduce((acc, session) => {
     const key = getEasternDateKey(session.startDate);
     if (!acc.has(key)) acc.set(key, []);
@@ -1298,7 +1286,7 @@ const CalendarPage = ({ member, authSession, activeSessions, onLogout }) => {
           <div className="tds-month-head">
             <div>
               <h2>{monthLabel}</h2>
-              <p>{filtered.length} matching classes this month</p>
+              <p>{monthClassCount} matching classes this month</p>
             </div>
             <div>
               <button type="button" onClick={() => shiftMonth(-1)}>‹</button>
@@ -1354,7 +1342,14 @@ const CalendarPage = ({ member, authSession, activeSessions, onLogout }) => {
             <div className="tds-day-list">
               {selectedItems.map((session) => (
                 <article className="tds-day-card" key={session.id}>
-                  {session.photo ? <img src={session.photo} alt="" /> : null}
+                  <div
+                    className="tds-day-thumb"
+                    data-has-photo={session.photo ? "true" : "false"}
+                    style={{
+                      backgroundImage: session.photo ? `url(${session.photo})` : "none"
+                    }}
+                    aria-hidden="true"
+                  />
                   <div>
                     <span>{session.category}</span>
                     <h3>{session.title}</h3>
