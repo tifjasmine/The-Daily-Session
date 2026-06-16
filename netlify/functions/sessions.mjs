@@ -8,6 +8,18 @@ const fieldNames = [
   "Class Name",
   "Studio/Business Name (from Studio Info 2)",
   "Neighborhood",
+  "Subcategory",
+  "Description",
+  "Address",
+  "Reminder",
+  "Google Calendar Link",
+  "Level",
+  "Drop in Rate",
+  "Price Bracket",
+  "Tags",
+  "Mood Matcher",
+  "Energy Level",
+  "Outcome/Benefit",
   "Photo",
   "Sign Up Link",
   "Studio Site",
@@ -54,6 +66,21 @@ const getPhotoUrl = (value) => {
   return "";
 };
 
+const getText = (value) => {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string" || typeof value === "number") return String(value);
+
+  if (Array.isArray(value)) {
+    return value.map(getText).filter(Boolean).join(", ");
+  }
+
+  if (typeof value === "object") {
+    return value.name || value.label || value.value || value.text || value.title || value.url || "";
+  }
+
+  return "";
+};
+
 const mapRecord = (record) => {
   const fields = record.fields || {};
   const start = fields.Start || fields["Start Time (NEW)"];
@@ -65,7 +92,19 @@ const mapRecord = (record) => {
     title: fields["Class Name"] || "Untitled Class",
     studio: getFirstString(fields["Studio/Business Name (from Studio Info 2)"]) || "Studio",
     category: getLabel(fields.Category) || "Class",
+    subcategory: getText(fields.Subcategory),
     neighborhood: getLabel(fields.Neighborhood),
+    address: getText(fields.Address),
+    description: getText(fields.Description),
+    reminder: getText(fields.Reminder),
+    googleCalendarLink: getFirstString(fields["Google Calendar Link"]),
+    level: getText(fields.Level),
+    dropInRate: getText(fields["Drop in Rate"]),
+    priceBracket: getText(fields["Price Bracket"]),
+    tags: getText(fields.Tags),
+    moodMatcher: getText(fields["Mood Matcher"]),
+    energyLevel: getText(fields["Energy Level"]),
+    outcomeBenefit: getText(fields["Outcome/Benefit"]),
     photo: getPhotoUrl(fields.Photo),
     studioSite: getFirstString(signUpLink),
     start,

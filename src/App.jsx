@@ -174,16 +174,57 @@ const normalizeSession = (session) => ({
   title: session.title || session.className || "Untitled Class",
   studio: session.studio || session.studioName || "Studio",
   category: session.category || "Class",
+  subcategory: session.subcategory || "",
   neighborhood: session.neighborhood || "",
+  address: session.address || "",
   level: session.level || "",
   dropInRate: session.dropInRate || session.rate || "",
+  priceBracket: session.priceBracket || "",
   description: session.description || "",
+  reminder: session.reminder || "",
+  googleCalendarLink: session.googleCalendarLink || "",
+  tags: session.tags || "",
+  moodMatcher: session.moodMatcher || "",
+  energyLevel: session.energyLevel || "",
+  outcomeBenefit: session.outcomeBenefit || "",
   startDate: new Date(session.start)
 });
 
 const navigateTo = (path) => {
   window.history.pushState({}, "", path);
   window.dispatchEvent(new PopStateEvent("popstate"));
+};
+
+const getSessionDetailPath = (session) => `/class/${encodeURIComponent(session.recordId || session.id)}`;
+
+const normalizeDetailList = (value) =>
+  String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const getSessionPrice = (session) => {
+  const rateText = String(session.dropInRate || "").trim();
+
+  if (rateText) {
+    const cleaned = rateText.replace(/[^0-9.]/g, "");
+    const amount = Number(cleaned);
+
+    if (!Number.isNaN(amount) && cleaned) {
+      if (amount === 0) return "Free";
+      return `$${amount.toFixed(0)}`;
+    }
+
+    return rateText;
+  }
+
+  return String(session.priceBracket || "").trim();
+};
+
+const formatSessionDateTime = (session) => {
+  if (!session?.startDate || Number.isNaN(session.startDate.getTime())) return "";
+
+  return `${formatEasternLongDate(session.startDate)} · ${formatEasternTime(session.startDate)}`;
 };
 
 const getStoredMember = () => {
@@ -1014,6 +1055,146 @@ const CalendarHero = () => (
   </section>
 );
 
+const DetailStat = ({ label, value }) => {
+  if (!value) return null;
+
+  return (
+    <div className="tds-class-stat">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+};
+
+const ClassDetailsPage = ({ member, authSession, activeSessions, onLogout, classId }) => {
+  if (!member?.paid || !authSession?.user?.id) {
+    return (
+      <AuthShell title="Members only details" eyebrow="Locked">
+        <p className="tds-auth-copy">
+          Log in with your member password to view full class details.
+        </p>
+        <button type="button" className="tds-auth-main-button" onClick={() => navigateTo("/signup")}>
+          Join to View Details
+        </button>
+        <button type="button" className="tds-link-button" onClick={() => navigateTo("/login")}>
+          Already joined? Log in
+        </button>
+      </AuthShell>
+    );
+  }
+
+  const decodedId = decodeURIComponent(classId || "");
+  const session = activeSessions.find(
+    (item) => item.id === decodedId || item.recordId === decodedId
+  );
+
+  if (!session) {
+    return (
+      <main className="tds-class-page">
+        <AppNav member={member} onLogout={onLogout} />
+        <section className="tds-class-empty">
+          <BrandLockup />
+          <h1>Class details are still loading.</h1>
+          <p>
+            Give the calendar a moment to catch up, or return to the full calendar and choose the class again.
+          </p>
+          <button type="button" onClick={() => navigateTo("/calendar")}>
+            Return to Calendar
+          </button>
+        </section>
+      </main>
+    );
+  }
+
+  const price = getSessionPrice(session);
+  const tags = [
+    ...normalizeDetailList(session.subcategory),
+    ...normalizeDetailList(session.tags),
+    ...normalizeDetailList(session.moodMatcher),
+    ...normalizeDetailList(session.energyLevel),
+    ...normalizeDetailList(session.outcomeBenefit)
+  ];
+
+  return (
+    <main className="tds-class-page">
+      <AppNav member={member} onLogout={onLogout} />
+      <section className="tds-class-detail-shell">
+        <article className="tds-class-detail-card">
+          <div className="tds-class-hero">
+            {session.photo ? (
+              <img src={session.photo} alt="" />
+            ) : (
+              <div className="tds-class-photo-placeholder">
+                <MiniCalendarLogo />
+              </div>
+            )}
+            <div>
+              <button type="button" onClick={() => navigateTo("/calendar")}>
+                Back to Calendar
+              </button>
+              <span>{session.category}</span>
+              <h1>{session.title}</h1>
+              <p>{session.studio}</p>
+            </div>
+          </div>
+
+          <div className="tds-class-body">
+            <div className="tds-class-stat-grid">
+              <DetailStat label="Date and Time" value={formatSessionDateTime(session)} />
+              <DetailStat label="Price" value={price} />
+              <DetailStat label="Location" value={session.address || session.neighborhood} />
+              <DetailStat label="Level" value={session.level} />
+            </div>
+
+            {tags.length ? (
+              <div className="tds-class-tags">
+                {tags.map((tag) => (
+                  <span key={tag}>{tag}</span>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="tds-class-content-grid">
+              <section>
+                <span>About This Class</span>
+                <p>
+                  {session.description ||
+                    "Details are still being gathered for this class. Check the studio signup page for the most current notes."}
+                </p>
+              </section>
+
+              <aside>
+                {session.reminder ? (
+                  <div className="tds-class-reminder">
+                    <span>Good to know</span>
+                    <p>{session.reminder}</p>
+                  </div>
+                ) : null}
+
+                <div className="tds-class-actions">
+                  {session.studioSite ? (
+                    <a href={session.studioSite} target="_blank" rel="noreferrer">
+                      Sign Up for This Class
+                    </a>
+                  ) : null}
+                  {session.googleCalendarLink ? (
+                    <a href={session.googleCalendarLink} target="_blank" rel="noreferrer">
+                      Add to Google Calendar
+                    </a>
+                  ) : null}
+                  <button type="button" onClick={() => navigateTo("/calendar")}>
+                    Return to Calendar
+                  </button>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+  );
+};
+
 const CalendarPage = ({ member, authSession, activeSessions, onLogout }) => {
   const [category, setCategory] = useState("all");
   const [studio, setStudio] = useState("all");
@@ -1022,7 +1203,6 @@ const CalendarPage = ({ member, authSession, activeSessions, onLogout }) => {
   const [viewMode, setViewMode] = useState("grid");
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [selectedDateKey, setSelectedDateKey] = useState(() => getEasternDateKey(new Date()));
-  const [selectedSession, setSelectedSession] = useState(null);
 
   if (!member?.paid || !authSession?.user?.id) {
     return (
@@ -1182,7 +1362,7 @@ const CalendarPage = ({ member, authSession, activeSessions, onLogout }) => {
                     <small>{formatEasternTime(session.startDate)}{session.neighborhood ? ` · ${session.neighborhood}` : ""}</small>
                   </div>
                   <div>
-                    <button type="button" onClick={() => setSelectedSession(session)}>
+                    <button type="button" onClick={() => navigateTo(getSessionDetailPath(session))}>
                       View Details
                     </button>
                     {session.studioSite ? (
@@ -1197,36 +1377,6 @@ const CalendarPage = ({ member, authSession, activeSessions, onLogout }) => {
           )}
         </aside>
       </section>
-
-      {selectedSession ? (
-        <div className="tds-modal-backdrop" onClick={() => setSelectedSession(null)}>
-          <div className="tds-modal" onClick={(event) => event.stopPropagation()}>
-            <div className="tds-modal-header">
-              <div>
-                <span>{formatEasternTime(selectedSession.startDate)}</span>
-                <h3>{selectedSession.title}</h3>
-              </div>
-              <button type="button" onClick={() => setSelectedSession(null)} aria-label="Close details">
-                ×
-              </button>
-            </div>
-            <div className="tds-modal-body">
-              {selectedSession.photo ? <img src={selectedSession.photo} alt="" /> : null}
-              <div>
-                <span>{selectedSession.category}</span>
-                <p>{selectedSession.studio}</p>
-                <p>{selectedSession.neighborhood}</p>
-                {selectedSession.description ? <p>{selectedSession.description}</p> : null}
-                {selectedSession.studioSite ? (
-                  <a href={selectedSession.studioSite} target="_blank" rel="noreferrer">
-                    Sign Up
-                  </a>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </main>
   );
 };
@@ -1681,6 +1831,26 @@ export default function App() {
         authSession={authSession}
         onMemberChange={setMember}
         onSessionChange={setAuthSession}
+      />
+    );
+  }
+
+  if (path.startsWith("/class/") || path === "/class-info") {
+    const classId =
+      path === "/class-info"
+        ? new URLSearchParams(window.location.search).get("recordId") ||
+          new URLSearchParams(window.location.search).get("record_id") ||
+          new URLSearchParams(window.location.search).get("classRecordId") ||
+          ""
+        : path.replace(/^\/class\//, "");
+
+    return (
+      <ClassDetailsPage
+        member={member}
+        authSession={authSession}
+        activeSessions={activeSessions}
+        onLogout={handleLogout}
+        classId={classId}
       />
     );
   }
