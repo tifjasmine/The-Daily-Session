@@ -163,6 +163,87 @@ const getCategoryPillStyle = (categoryLabel) => {
   return { background: "#f1e2d2", color: "#7a4a2a", border: "#e2c4aa" };
 };
 
+const partnerCategories = [
+  "All Categories",
+  "Mind-Body Practices",
+  "Dance & Movement Arts",
+  "Sports & Fitness",
+  "Acrobatics & Circus Arts",
+  "Creative Arts",
+  "Martial Arts",
+  "Performing Arts",
+  "Recreation",
+  "Food and Drinks",
+  "Community and Lifestyle"
+];
+
+const studioSlug = (value) =>
+  String(value || "studio")
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "studio";
+
+const mostCommon = (values, fallback = "") => {
+  const counts = values.filter(Boolean).reduce((acc, value) => {
+    acc.set(value, (acc.get(value) || 0) + 1);
+    return acc;
+  }, new Map());
+
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || fallback;
+};
+
+const shortText = (text, max = 150) => {
+  const clean = String(text || "").replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  return `${clean.slice(0, max).trim()}...`;
+};
+
+const buildStudioPartners = (sessions) => {
+  const grouped = sessions.reduce((acc, session) => {
+    if (!session.studio) return acc;
+    const key = studioSlug(session.studio);
+    if (!acc.has(key)) acc.set(key, []);
+    acc.get(key).push(session);
+    return acc;
+  }, new Map());
+
+  return [...grouped.entries()]
+    .map(([slug, items]) => {
+      const sorted = [...items].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+      const firstWithPhoto = sorted.find((session) => session.photo);
+      const firstWithDescription = sorted.find((session) => session.description);
+      const subcategories = [
+        ...new Set(
+          sorted
+            .flatMap((session) => String(session.subcategory || "").split(","))
+            .map((item) => item.trim())
+            .filter(Boolean)
+        )
+      ];
+
+      return {
+        slug,
+        name: sorted[0]?.studio || "Studio",
+        category: mostCommon(sorted.map((session) => session.category), "Class"),
+        subcategory: subcategories.join(", "),
+        subcategories,
+        neighborhood: mostCommon(sorted.map((session) => session.neighborhood), ""),
+        address: mostCommon(sorted.map((session) => session.address), ""),
+        description:
+          firstWithDescription?.description ||
+          `${sorted[0]?.studio || "This studio"} has ${sorted.length} upcoming classes on The Daily Session.`,
+        photo: firstWithPhoto?.photo || "",
+        website: sorted.find((session) => session.studioSite)?.studioSite || "",
+        upcoming: sorted,
+        hasPerk: true,
+        perk:
+          "Member perk details are available through The Daily Session. Check this studio's booking notes before checkout."
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+};
+
 const normalizeSession = (session) => ({
   ...session,
   title: session.title || session.className || "Untitled Class",
@@ -479,6 +560,9 @@ const AppNav = ({ member, onLogout }) => {
         </div>
         {member ? (
           <>
+            <button type="button" onClick={() => goTo("/companies")}>
+              Studios
+            </button>
             <button type="button" onClick={() => goTo("/profile")}>
               Profile
             </button>
@@ -2354,6 +2438,284 @@ const ClassDetailsPage = ({ member, authSession, activeSessions, onLogout, class
   );
 };
 
+const MemberOnlyGate = ({ title, children }) => (
+  <AuthShell title={title} eyebrow="Members">
+    {children}
+    <button type="button" className="tds-auth-main-button" onClick={() => navigateTo("/signup")}>
+      Join to Unlock
+    </button>
+    <button type="button" className="tds-link-button" onClick={() => navigateTo("/login")}>
+      Already joined? Log in
+    </button>
+  </AuthShell>
+);
+
+const CompaniesPage = ({ member, authSession, activeSessions, onLogout }) => {
+  const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All Categories");
+  const [perksOnly, setPerksOnly] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(12);
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [search, activeCategory, perksOnly]);
+
+  if (!member?.paid || !authSession?.user?.id) {
+    return (
+      <MemberOnlyGate title="Members only studio partners">
+        <p className="tds-auth-copy">
+          Log in with your member password to view studio partners and member perks.
+        </p>
+      </MemberOnlyGate>
+    );
+  }
+
+  const partners = buildStudioPartners(activeSessions);
+  const filtered = partners.filter((partner) => {
+    const haystack = `${partner.name} ${partner.neighborhood} ${partner.category} ${partner.subcategory}`.toLowerCase();
+    const query = search.trim().toLowerCase();
+    const matchesSearch = !query || haystack.includes(query);
+    const matchesCategory =
+      activeCategory === "All Categories" ||
+      partner.category === activeCategory ||
+      partner.category.toLowerCase().includes(activeCategory.toLowerCase());
+    const matchesPerks = !perksOnly || partner.hasPerk;
+    return matchesSearch && matchesCategory && matchesPerks;
+  });
+  const visible = filtered.slice(0, visibleCount);
+
+  return (
+    <main className="tds-companies-page">
+      <AppNav member={member} onLogout={onLogout} />
+      <section className="tds-companies-hero">
+        <span>The Daily Session</span>
+        <h1>Studio Partners</h1>
+        <p>50+ studios across Philadelphia, each gathered into one member-friendly guide.</p>
+      </section>
+
+      <section className="tds-companies-controls" aria-label="Studio filters">
+        <input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search studios, neighborhoods..."
+        />
+        <button
+          type="button"
+          className={perksOnly ? "is-active" : ""}
+          onClick={() => setPerksOnly((current) => !current)}
+        >
+          Member Perks Only
+        </button>
+      </section>
+
+      <nav className="tds-companies-tabs" aria-label="Studio categories">
+        {partnerCategories.map((category) => (
+          <button
+            key={category}
+            type="button"
+            className={activeCategory === category ? "is-active" : ""}
+            onClick={() => setActiveCategory(category)}
+          >
+            {category}
+          </button>
+        ))}
+      </nav>
+
+      <section className="tds-companies-list">
+        <p>{filtered.length} studios</p>
+        {visible.length ? (
+          <div className="tds-companies-grid">
+            {visible.map((partner) => {
+              const style = getCategoryPillStyle(partner.category);
+
+              return (
+                <article className="tds-company-card" key={partner.slug}>
+                  <button
+                    type="button"
+                    className="tds-company-photo"
+                    style={{ backgroundImage: partner.photo ? `url(${partner.photo})` : "none" }}
+                    onClick={() => navigateTo(`/companies/${partner.slug}`)}
+                    aria-label={`View ${partner.name}`}
+                  >
+                    {partner.hasPerk ? <span>Member Perk</span> : null}
+                    <i style={{ background: style.color }}>{partner.category}</i>
+                  </button>
+                  <div className="tds-company-body">
+                    {partner.neighborhood ? <small>{partner.neighborhood}</small> : null}
+                    <h2>{partner.name}</h2>
+                    <p>{partner.subcategory || partner.category}</p>
+                    <p>{shortText(partner.description, 150)}</p>
+                    {partner.hasPerk ? <blockquote>{shortText(partner.perk, 130)}</blockquote> : null}
+                    <footer>
+                      <span>{shortText(partner.subcategory || partner.category, 28)}</span>
+                      <button type="button" onClick={() => navigateTo(`/companies/${partner.slug}`)}>
+                        View studio →
+                      </button>
+                    </footer>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="tds-empty-state">
+            <strong>No studios match that search</strong>
+            <span>Try another category or clear the search field.</span>
+          </div>
+        )}
+        {visibleCount < filtered.length ? (
+          <button
+            type="button"
+            className="tds-companies-load"
+            onClick={() => setVisibleCount((count) => count + 12)}
+          >
+            Load More Studios
+          </button>
+        ) : null}
+      </section>
+    </main>
+  );
+};
+
+const CompanyDetailsPage = ({ member, authSession, activeSessions, onLogout, slug }) => {
+  if (!member?.paid || !authSession?.user?.id) {
+    return (
+      <MemberOnlyGate title="Members only studio details">
+        <p className="tds-auth-copy">
+          Log in with your member password to view studio details, perks, and upcoming classes.
+        </p>
+      </MemberOnlyGate>
+    );
+  }
+
+  const partner = buildStudioPartners(activeSessions).find((item) => item.slug === slug);
+
+  if (!partner) {
+    return (
+      <main className="tds-company-detail-page">
+        <AppNav member={member} onLogout={onLogout} />
+        <section className="tds-class-empty">
+          <h1>Studio not found</h1>
+          <p>That partner may not be in the current Airtable class feed yet.</p>
+          <button type="button" onClick={() => navigateTo("/companies")}>
+            Back to Studio Partners
+          </button>
+        </section>
+      </main>
+    );
+  }
+
+  const upcoming = partner.upcoming
+    .filter((session) => session.startDate.getTime() >= Date.now())
+    .slice(0, 30);
+  const style = getCategoryPillStyle(partner.category);
+
+  return (
+    <main className="tds-company-detail-page">
+      <AppNav member={member} onLogout={onLogout} />
+      <section
+        className="tds-company-detail-hero"
+        style={{ backgroundImage: partner.photo ? `url(${partner.photo})` : "none" }}
+      >
+        <div>
+          <button type="button" onClick={() => navigateTo("/companies")}>
+            ← Studio Partners
+          </button>
+          <h1>{partner.name}</h1>
+          <p>
+            <span style={{ background: style.color }}>{partner.category}</span>
+            {partner.subcategories.slice(0, 2).map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+            {partner.neighborhood ? <span>{partner.neighborhood}</span> : null}
+          </p>
+        </div>
+      </section>
+
+      <section className="tds-company-detail-grid">
+        <div>
+          <article className="tds-company-detail-card">
+            <h2>About</h2>
+            <p>{partner.description}</p>
+          </article>
+          {partner.subcategories.length ? (
+            <article className="tds-company-detail-card">
+              <h2>Studio Highlights</h2>
+              <ul>
+                {partner.subcategories.slice(0, 8).map((item) => (
+                  <li key={item}>⇒ {item}</li>
+                ))}
+              </ul>
+            </article>
+          ) : null}
+        </div>
+        <aside>
+          <article className="tds-company-perk-card">
+            <span>Member Perks</span>
+            <p>{partner.perk}</p>
+          </article>
+          <article className="tds-company-info-card">
+            <span>Studio Info</span>
+            {partner.address ? (
+              <>
+                <small>Address</small>
+                <p>{partner.address}</p>
+              </>
+            ) : null}
+            {partner.website ? (
+              <>
+                <small>Website</small>
+                <a href={partner.website} target="_blank" rel="noreferrer">
+                  Open studio site
+                </a>
+              </>
+            ) : null}
+            <small>Categories</small>
+            <p>{partner.category}</p>
+            {partner.subcategories.length ? (
+              <>
+                <small>Subcategories</small>
+                <div>
+                  {partner.subcategories.slice(0, 6).map((item) => (
+                    <i key={item}>{item}</i>
+                  ))}
+                </div>
+              </>
+            ) : null}
+          </article>
+        </aside>
+      </section>
+
+      <section className="tds-company-upcoming">
+        <h2>Upcoming Classes</h2>
+        <p>{upcoming.length} classes in the next 30 days</p>
+        {upcoming.map((session) => (
+          <article key={session.id}>
+            <div
+              style={{ backgroundImage: session.photo ? `url(${session.photo})` : "none" }}
+              aria-hidden="true"
+            />
+            <div>
+              <span>{session.category}</span>
+              <strong>{formatEasternTime(session.startDate)}</strong>
+              <h3>{session.title}</h3>
+              <p>{session.neighborhood}</p>
+            </div>
+            <button type="button" onClick={() => navigateTo(getSessionDetailPath(session))}>
+              View Details
+            </button>
+            {session.studioSite ? (
+              <a href={session.studioSite} target="_blank" rel="noreferrer">
+                Sign Up
+              </a>
+            ) : null}
+          </article>
+        ))}
+      </section>
+    </main>
+  );
+};
+
 const CalendarPage = ({ member, authSession, activeSessions, onLogout }) => {
   const [category, setCategory] = useState("all");
   const [studio, setStudio] = useState("all");
@@ -3041,6 +3403,29 @@ export default function App() {
         authSession={authSession}
         activeSessions={activeSessions}
         onLogout={handleLogout}
+      />
+    );
+  }
+
+  if (path === "/companies") {
+    return (
+      <CompaniesPage
+        member={member}
+        authSession={authSession}
+        activeSessions={activeSessions}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  if (path.startsWith("/companies/")) {
+    return (
+      <CompanyDetailsPage
+        member={member}
+        authSession={authSession}
+        activeSessions={activeSessions}
+        onLogout={handleLogout}
+        slug={path.replace(/^\/companies\//, "")}
       />
     );
   }
