@@ -1819,26 +1819,26 @@ h1 em {
 
 .tds-page-header-shell {
   background: linear-gradient(135deg, #4b2414 0%, #6d310f 55%, #88441f 100%);
-  padding: 24px;
+  padding: 42px 24px 38px;
 }
 
 .tds-page-header-card {
   width: min(1180px, 100%);
   margin: 0 auto;
   display: block;
-  border: 1px solid rgba(245, 232, 216, 0.16);
-  border-radius: 18px;
-  background: rgba(245, 232, 216, 0.08);
-  padding: 28px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
 }
 
 .tds-page-header-card h1 {
-  max-width: 860px;
-  margin: 18px 0;
+  max-width: 760px;
+  margin: 16px 0 14px;
   color: #f5e8d8;
   font-family: var(--tds-serif);
-  font-size: clamp(2.2rem, 5vw, 3.4rem);
-  line-height: 1.05;
+  font-size: clamp(2.15rem, 4.2vw, 3.25rem);
+  line-height: 1.08;
 }
 
 .tds-page-header-card h1 em {
@@ -1846,30 +1846,22 @@ h1 em {
 }
 
 .tds-page-header-card p {
-  max-width: 680px;
+  max-width: 660px;
   margin: 0;
   color: rgba(245, 232, 216, 0.78);
   line-height: 1.65;
 }
 
-.tds-page-header-card .tds-brand-lockup {
-  margin-bottom: 24px;
-}
-
-.tds-page-header-card .tds-brand-lockup img {
-  width: min(190px, 48vw);
-}
-
 .tds-page-header-kicker {
   display: inline-flex;
-  border: 1px solid rgba(245, 232, 216, 0.14);
-  border-radius: 999px;
-  background: rgba(245, 232, 216, 0.12);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: #f3d4b7;
-  padding: 8px 12px;
+  padding: 0;
   font-size: 0.75rem;
   font-weight: 650;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
@@ -1880,7 +1872,7 @@ h1 em {
   align-items: center;
   width: min(1180px, 100%);
   margin: 0 auto;
-  padding: 24px 24px 28px;
+  padding: 20px 24px 24px;
   color: #f4dfcf;
 }
 
@@ -2403,11 +2395,11 @@ h1 em {
 
 .tds-business-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 48px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  gap: 36px;
   align-items: center;
-  min-height: 72vh;
-  padding: 72px clamp(24px, 6vw, 72px);
+  min-height: auto;
+  padding: 54px clamp(24px, 6vw, 72px);
   background: #3d2314;
   color: #f8efe2;
 }
@@ -2447,10 +2439,10 @@ h1 em {
   max-width: 780px;
   margin: 24px 0 22px;
   font-family: var(--tds-serif);
-  font-size: clamp(3rem, 7vw, 6.4rem);
-  font-weight: 600;
+  font-size: clamp(2.4rem, 5.4vw, 4.5rem);
+  font-weight: 500;
   letter-spacing: 0;
-  line-height: 0.94;
+  line-height: 1.02;
 }
 
 .tds-business-hero h1 em,
@@ -2498,9 +2490,9 @@ h1 em {
 .tds-business-proof {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 28px;
-  margin: 56px 0 0;
-  padding-top: 32px;
+  gap: 18px;
+  margin: 38px 0 0;
+  padding-top: 24px;
   border-top: 1px solid rgba(245, 232, 216, 0.12);
 }
 
@@ -2524,11 +2516,11 @@ h1 em {
 }
 
 .tds-business-card {
-  border-radius: 24px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.06);
   overflow: hidden;
-  min-height: 300px;
-  padding: 28px;
+  min-height: auto;
+  padding: 26px;
   box-shadow: inset 0 0 0 1px rgba(245, 232, 216, 0.08);
 }
 
@@ -2544,9 +2536,9 @@ h1 em {
 }
 
 .tds-business-card h2 {
-  margin: 74px 0 14px;
+  margin: 54px 0 14px;
   font-family: var(--tds-serif);
-  font-size: 2.2rem;
+  font-size: 1.8rem;
   font-weight: 600;
   line-height: 1;
 }
@@ -2558,18 +2550,18 @@ h1 em {
 }
 
 .tds-business-form-section {
-  padding: 72px clamp(18px, 6vw, 72px) 96px;
+  padding: 54px clamp(18px, 6vw, 72px) 84px;
 }
 
 .tds-business-form-heading {
   width: min(860px, 100%);
-  margin: 0 auto 44px;
+  margin: 0 auto 28px;
 }
 
 .tds-business-form-heading h2 {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   color: #3d2216;
-  font-size: clamp(2.8rem, 6vw, 5.4rem);
+  font-size: clamp(2.1rem, 4.4vw, 3.6rem);
 }
 
 .tds-business-form-heading p,
@@ -2584,22 +2576,31 @@ h1 em {
 .tds-business-form {
   width: min(860px, 100%);
   margin: 0 auto;
+  border: 1px solid rgba(61, 34, 22, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 253, 249, 0.72);
+  padding: clamp(18px, 4vw, 34px);
 }
 
 .tds-business-form fieldset {
   border: 0;
   border-top: 1px solid rgba(61, 34, 22, 0.12);
   margin: 0;
-  padding: 34px 0 28px;
+  padding: 26px 0 22px;
+}
+
+.tds-business-form fieldset:first-child {
+  border-top: 0;
+  padding-top: 0;
 }
 
 .tds-business-form legend {
   display: grid;
   gap: 8px;
   width: 100%;
-  padding: 0 0 20px;
+  padding: 0 0 16px;
   font-family: var(--tds-serif);
-  font-size: 1.8rem;
+  font-size: 1.45rem;
   font-weight: 600;
   color: #3d2216;
 }
@@ -2625,10 +2626,10 @@ h1 em {
 .tds-business-form textarea {
   width: 100%;
   border: 1px solid rgba(61, 34, 22, 0.2);
-  border-radius: 12px;
+  border-radius: 10px;
   background: #fffdf9;
   color: #3d2216;
-  padding: 16px 18px;
+  padding: 14px 16px;
   font-size: 1rem;
   font-weight: 400;
   outline: 0;
@@ -2671,7 +2672,7 @@ h1 em {
 
 .tds-business-choice-group button {
   border: 1px solid rgba(61, 34, 22, 0.14);
-  border-radius: 999px;
+  border-radius: 8px;
   background: #f8efe2;
   color: #4a2a1d;
   cursor: pointer;
@@ -3426,6 +3427,25 @@ h1 em {
   margin-top: 22px;
 }
 
+.tds-company-info-row {
+  border-bottom: 1px solid rgba(61, 34, 22, 0.08);
+  padding: 0 0 16px;
+}
+
+.tds-company-info-row + .tds-company-info-row {
+  padding-top: 4px;
+}
+
+.tds-company-info-row small {
+  margin-top: 0;
+}
+
+.tds-company-info-row p,
+.tds-company-info-row a {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+}
+
 .tds-company-info-card i {
   display: inline-block;
   border-radius: 999px;
@@ -3511,6 +3531,19 @@ h1 em {
 .tds-company-upcoming a {
   background: transparent;
   color: #3d2314;
+}
+
+.tds-company-upcoming .tds-company-load-more {
+  display: block;
+  width: min(320px, 100%);
+  margin: 30px auto 0;
+  border: 1px solid #3d2314;
+  border-radius: 10px;
+  background: transparent;
+  color: #3d2314;
+  cursor: pointer;
+  padding: 15px 20px;
+  font-weight: 700;
 }
 
 .tds-wellness-page,

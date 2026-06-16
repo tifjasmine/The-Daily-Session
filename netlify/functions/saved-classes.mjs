@@ -11,7 +11,14 @@ const json = (statusCode, body) => ({
 const getConfig = () => ({
   token: process.env.AIRTABLE_TOKEN || process.env.AIRTABLE_API_KEY,
   baseId: process.env.AIRTABLE_BASE_ID || DEFAULT_BASE_ID,
-  table: process.env.AIRTABLE_SAVED_CLASSES_TABLE_ID || process.env.AIRTABLE_SAVED_CLASSES_TABLE || DEFAULT_TABLE_NAME
+  table: process.env.AIRTABLE_SAVED_CLASSES_TABLE_ID || process.env.AIRTABLE_SAVED_CLASSES_TABLE || DEFAULT_TABLE_NAME,
+  userTables: [
+    process.env.AIRTABLE_USERS_TABLE_ID,
+    process.env.AIRTABLE_USERS_TABLE,
+    "Users",
+    process.env.AIRTABLE_MEMBERS_TABLE_ID,
+    "Members"
+  ].filter(Boolean)
 });
 
 const getText = (value) => {
@@ -44,6 +51,8 @@ const getField = (fields, names) => {
 };
 
 const escapeFormulaString = (value) => String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+const memberEmailFormula = (email) =>
+  `LOWER({Email (from Users)})="${escapeFormulaString(email.toLowerCase())}"`;
 
 const mapRecord = (record) => {
   const fields = record.fields || {};
@@ -53,7 +62,7 @@ const mapRecord = (record) => {
   return {
     id: record.id,
     savedAt: getText(getField(fields, ["Saved At", "Created", "Created Time"])) || record.createdTime || "",
-    memberEmail: getText(getField(fields, ["Email", "Member Email", "User Email"])),
+    memberEmail: getText(getField(fields, ["Email (from Users)", "Email", "Member Email", "User Email"])),
     classId: classId || linkedClass,
     title: getText(getField(fields, ["Snapshot: Class Name", "Class Name", "Name"])) || "Class",
     category: getText(getField(fields, ["Snapshot: Category", "Category"])),
@@ -94,12 +103,56 @@ const airtableRequest = async ({ method = "GET", path = "", params, body }) => {
   return payload;
 };
 
+const fetchTable = async ({ table, params }) => {
+  const { token, baseId } = getConfig();
+  if (!token) throw new Error("Missing AIRTABLE_TOKEN environment variable");
+
+  const query = params ? `?${params.toString()}` : "";
+  const response = await fetch(`${AIRTABLE_API_URL}/${baseId}/${encodeURIComponent(table)}${query}`, {
+    headers: {
+      authorization: `Bearer ${token}`
+    }
+  });
+
+  const text = await response.text();
+  const payload = text ? JSON.parse(text) : {};
+  if (!response.ok) throw new Error(payload?.error?.message || payload?.error || text || "Airtable request failed");
+  return payload;
+};
+
+const findLinkedUserId = async (email) => {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  if (!normalizedEmail) return "";
+
+  const { userTables } = getConfig();
+  const formulas = [
+    `LOWER({Email})="${escapeFormulaString(normalizedEmail)}"`,
+    `LOWER({Email Address})="${escapeFormulaString(normalizedEmail)}"`,
+    `LOWER({User Email})="${escapeFormulaString(normalizedEmail)}"`
+  ];
+
+  for (const table of [...new Set(userTables)]) {
+    for (const filterByFormula of formulas) {
+      try {
+        const params = new URLSearchParams({ pageSize: "1", filterByFormula });
+        const payload = await fetchTable({ table, params });
+        const record = payload.records?.[0];
+        if (record?.id) return record.id;
+      } catch {
+        // Try the next likely user table/field shape.
+      }
+    }
+  }
+
+  return "";
+};
+
 const findSaved = async ({ email, classId }) => {
   if (!email || !classId) return null;
 
   const params = new URLSearchParams({
     pageSize: "1",
-    filterByFormula: `AND(LOWER({Email})="${escapeFormulaString(email.toLowerCase())}", {Class ID}="${escapeFormulaString(classId)}")`
+    filterByFormula: `AND(${memberEmailFormula(email)}, {Class ID}="${escapeFormulaString(classId)}")`
   });
   const payload = await airtableRequest({ params });
   return payload.records?.[0] || null;
@@ -112,7 +165,7 @@ const listSaved = async (email) => {
   do {
     const params = new URLSearchParams({ pageSize: "100" });
     if (email) {
-      params.set("filterByFormula", `LOWER({Email})="${escapeFormulaString(email.toLowerCase())}"`);
+      params.set("filterByFormula", memberEmailFormula(email));
     }
     if (offset) params.set("offset", offset);
 
@@ -124,8 +177,8 @@ const listSaved = async (email) => {
   return records.map(mapRecord);
 };
 
-const toFields = ({ email, session }) => ({
-  Email: String(email || "").trim().toLowerCase(),
+const toFields = ({ userId, session }) => ({
+  Users: userId ? [userId] : undefined,
   "Class ID": session.recordId || session.id || "",
   "Snapshot: Class Name": session.title || "",
   "Snapshot: Category": session.category || "",
@@ -168,9 +221,17 @@ export const handler = async (event) => {
         return json(200, { savedClass: mapRecord(existing), alreadySaved: true });
       }
 
+      const userId = await findLinkedUserId(email);
+      if (!userId) {
+        return json(400, {
+          error: "Member not found in Airtable Users",
+          detail: "Saved Classes uses a linked Users field. Add this member to the Users table or set AIRTABLE_USERS_TABLE_ID."
+        });
+      }
+
       const created = await airtableRequest({
         method: "POST",
-        body: { fields: compactFields(toFields({ email, session })), typecast: true }
+        body: { fields: compactFields(toFields({ userId, session })), typecast: true }
       });
 
       return json(200, { savedClass: mapRecord(created), alreadySaved: false });

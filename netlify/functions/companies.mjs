@@ -24,6 +24,12 @@ const getAllText = (value) => {
   return [getText(value)].filter(Boolean);
 };
 
+const splitLines = (value) =>
+  getText(value)
+    .split(/\r?\n|;/)
+    .map((item) => item.replace(/^[-•→⇒]\s*/, "").trim())
+    .filter(Boolean);
+
 const getPhotoUrl = (value) => {
   if (Array.isArray(value)) {
     const first = value[0];
@@ -56,6 +62,16 @@ const mapRecord = (record) => {
   const category = getText(getField(fields, ["Category", "Primary Category"]));
   const subcategories = getAllText(getField(fields, ["Subcategory", "Subcategories", "Class Types"]));
   const perk = getText(getField(fields, ["Member Perks", "Member Perk", "Discount", "Studio Perks"]));
+  const descriptionFull = getText(
+    getField(fields, ["Description Full", "Full Description", "Long Description", "About Full"])
+  );
+  const descriptionShort = getText(
+    getField(fields, ["Description Short", "Description", "About", "Studio Description"])
+  );
+  const highlightsField = getField(fields, ["Class Highlights", "Studio Highlights", "Highlights"]);
+  const highlights = getAllText(highlightsField);
+  const classHighlights =
+    highlights.length === 1 && /[\r\n;]/.test(highlights[0]) ? splitLines(highlightsField) : highlights;
 
   return {
     id: record.id,
@@ -66,14 +82,20 @@ const mapRecord = (record) => {
     subcategories,
     neighborhood: getText(getField(fields, ["Neighborhood", "Philadelphia Neighborhood"])),
     address: getText(getField(fields, ["Address", "Studio Address"])),
-    description: getText(
-      getField(fields, ["Description Short", "Description", "About", "Studio Description"])
-    ),
+    description: descriptionShort || descriptionFull,
+    descriptionFull: descriptionFull || descriptionShort,
+    classHighlights,
     photo: getPhotoUrl(getField(fields, ["Photo", "Business Photo", "Studio Photo"])),
     website: getText(getField(fields, ["Website", "Studio Site", "Site"])),
     phone: getText(getField(fields, ["Phone", "Number"])),
     email: getText(getField(fields, ["Email"])),
     socialMedia: getText(getField(fields, ["Social Media", "Instagram", "Instagram handle"])),
+    bookingLink: getText(getField(fields, ["Booking Link", "Booking URL", "Schedule URL", "Public Calendar Link"])),
+    hours: getText(getField(fields, ["Hours", "Hours / Availability", "Schedule"])),
+    priceRange: getText(getField(fields, ["Price Range", "Price Range per Class", "Drop in Rate"])),
+    parking: getText(getField(fields, ["Parking", "Parking Info"])),
+    accessibility: getText(getField(fields, ["Accessibility", "Access Info"])),
+    visitType: getText(getField(fields, ["Visit Type", "Class Format"])),
     perk,
     hasPerk: Boolean(perk),
     upcoming: []

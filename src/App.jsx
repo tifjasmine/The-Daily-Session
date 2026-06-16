@@ -2418,7 +2418,6 @@ const CalendarHero = () => (
   <section className="tds-page-header-shell">
     <div className="tds-page-header-card">
       <div>
-        <BrandLockup />
         <span className="tds-page-header-kicker">Monthly Calendar</span>
         <h1>
           Explore what's <em>happening</em> this month.
@@ -3303,6 +3302,7 @@ const CompaniesPage = ({ member, authSession, activeSessions, onLogout }) => {
 const CompanyDetailsPage = ({ member, authSession, activeSessions, onLogout, slug }) => {
   const [apiPartners, setApiPartners] = useState([]);
   const [companyStatus, setCompanyStatus] = useState({ loading: true, error: "" });
+  const [visibleUpcomingCount, setVisibleUpcomingCount] = useState(10);
 
   useEffect(() => {
     if (!member?.paid || !authSession?.user?.id) return undefined;
@@ -3331,6 +3331,10 @@ const CompanyDetailsPage = ({ member, authSession, activeSessions, onLogout, slu
       isMounted = false;
     };
   }, [member?.paid, authSession?.user?.id]);
+
+  useEffect(() => {
+    setVisibleUpcomingCount(10);
+  }, [slug]);
 
   if (!member?.paid || !authSession?.user?.id) {
     return (
@@ -3362,13 +3366,33 @@ const CompanyDetailsPage = ({ member, authSession, activeSessions, onLogout, slu
     );
   }
 
+  const partnerSessionSlug = studioSlug(partner.name);
   const upcoming = activeSessions
-    .filter((session) => studioSlug(session.studio) === partner.slug)
+    .filter((session) => {
+      const sessionSlug = studioSlug(session.studio);
+      return sessionSlug === partner.slug || sessionSlug === partnerSessionSlug;
+    })
     .concat(partner.upcoming || [])
-    .filter((session) => session.startDate.getTime() >= Date.now())
+    .filter((session) => session.startDate && session.startDate.getTime() >= Date.now())
     .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
-    .slice(0, 30);
+    .slice(0, 60);
+  const visibleUpcoming = upcoming.slice(0, visibleUpcomingCount);
+  const hasMoreUpcoming = visibleUpcomingCount < upcoming.length;
   const style = getCategoryPillStyle(partner.category);
+  const highlights = (partner.classHighlights?.length ? partner.classHighlights : partner.subcategories || []).slice(0, 10);
+  const studioInfo = [
+    ["Address", partner.address],
+    ["Phone", partner.phone],
+    ["Email", partner.email],
+    ["Website", partner.website],
+    ["Booking", partner.bookingLink],
+    ["Hours", partner.hours],
+    ["Price Range", partner.priceRange],
+    ["Visit Type", partner.visitType],
+    ["Parking", partner.parking],
+    ["Accessibility", partner.accessibility],
+    ["Social Media", partner.socialMedia]
+  ].filter(([, value]) => Boolean(value));
 
   return (
     <main className="tds-company-detail-page">
@@ -3396,13 +3420,13 @@ const CompanyDetailsPage = ({ member, authSession, activeSessions, onLogout, slu
         <div>
           <article className="tds-company-detail-card">
             <h2>About</h2>
-            <p>{partner.description}</p>
+            <p>{partner.descriptionFull || partner.description}</p>
           </article>
-          {partner.subcategories.length ? (
+          {highlights.length ? (
             <article className="tds-company-detail-card">
               <h2>Studio Highlights</h2>
               <ul>
-                {partner.subcategories.slice(0, 8).map((item) => (
+                {highlights.map((item) => (
                   <li key={item}>⇒ {item}</li>
                 ))}
               </ul>
@@ -3416,20 +3440,18 @@ const CompanyDetailsPage = ({ member, authSession, activeSessions, onLogout, slu
           </article>
           <article className="tds-company-info-card">
             <span>Studio Info</span>
-            {partner.address ? (
-              <>
-                <small>Address</small>
-                <p>{partner.address}</p>
-              </>
-            ) : null}
-            {partner.website ? (
-              <>
-                <small>Website</small>
-                <a href={partner.website} target="_blank" rel="noreferrer">
-                  Open studio site
-                </a>
-              </>
-            ) : null}
+            {studioInfo.map(([label, value]) => (
+              <div className="tds-company-info-row" key={label}>
+                <small>{label}</small>
+                {/^https?:\/\//.test(String(value)) ? (
+                  <a href={value} target="_blank" rel="noreferrer">
+                    Open link
+                  </a>
+                ) : (
+                  <p>{value}</p>
+                )}
+              </div>
+            ))}
             <small>Categories</small>
             <p>{partner.category}</p>
             {partner.subcategories.length ? (
@@ -3448,8 +3470,10 @@ const CompanyDetailsPage = ({ member, authSession, activeSessions, onLogout, slu
 
       <section className="tds-company-upcoming">
         <h2>Upcoming Classes</h2>
-        <p>{upcoming.length} classes in the next 30 days</p>
-        {upcoming.map((session) => (
+        <p>
+          Showing {visibleUpcoming.length} of {upcoming.length} upcoming classes
+        </p>
+        {visibleUpcoming.map((session) => (
           <article key={session.id}>
             <div
               style={{ backgroundImage: session.photo ? `url(${session.photo})` : "none" }}
@@ -3471,6 +3495,15 @@ const CompanyDetailsPage = ({ member, authSession, activeSessions, onLogout, slu
             ) : null}
           </article>
         ))}
+        {hasMoreUpcoming ? (
+          <button
+            type="button"
+            className="tds-company-load-more"
+            onClick={() => setVisibleUpcomingCount((count) => count + 10)}
+          >
+            Load More Classes
+          </button>
+        ) : null}
       </section>
     </main>
   );
