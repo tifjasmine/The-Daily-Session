@@ -30,6 +30,10 @@
   overscroll-behavior: contain;
 }
 
+.tds-provider-proof {
+  display: none !important;
+}
+
 .tds-join-hero h1,
 .tds-business-hero h1,
 .tds-provider-hero h1,
