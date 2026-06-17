@@ -13,12 +13,7 @@ const getConfig = () => ({
   token: process.env.AIRTABLE_TOKEN || process.env.AIRTABLE_API_KEY,
   baseId: process.env.AIRTABLE_BASE_ID || DEFAULT_BASE_ID,
   table: process.env.AIRTABLE_SAVED_CLASSES_TABLE_ID || process.env.AIRTABLE_SAVED_CLASSES_TABLE || DEFAULT_TABLE_NAME,
-  usersTable:
-    process.env.AIRTABLE_SAVED_CLASSES_USERS_TABLE_ID ||
-    process.env.AIRTABLE_USERS_TABLE_ID ||
-    process.env.AIRTABLE_MEMBERS_TABLE_ID ||
-    process.env.AIRTABLE_USERS_TABLE ||
-    DEFAULT_LINKED_USERS_TABLE_ID
+  usersTable: process.env.AIRTABLE_SAVED_CLASSES_USERS_TABLE_ID || DEFAULT_LINKED_USERS_TABLE_ID
 });
 
 const getText = (value) => {
