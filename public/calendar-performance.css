@@ -29,3 +29,65 @@
 .tds-day-list {
   overscroll-behavior: contain;
 }
+
+.tds-join-hero h1,
+.tds-business-hero h1,
+.tds-provider-hero h1,
+.tds-companies-hero h1,
+.tds-wellness-hero h1,
+.tds-provider-detail-hero h1,
+.tds-company-detail-hero h1,
+.tds-saved-hero h1,
+.tds-class-hero h1,
+.tds-profile-intro h1,
+.tds-auth-card h1,
+.tds-profile-card h1,
+.tds-page-header-card h1,
+.tds-class-empty h1 {
+  font-size: clamp(2.35rem, 4.4vw, 3.75rem) !important;
+  line-height: 1.06 !important;
+  letter-spacing: 0 !important;
+}
+
+.tds-join-section h2,
+.tds-business-form-heading h2,
+.tds-provider-benefit-card h2 {
+  font-size: clamp(2rem, 3.4vw, 2.85rem) !important;
+  line-height: 1.08 !important;
+  letter-spacing: 0 !important;
+}
+
+.tds-join-hero,
+.tds-business-hero,
+.tds-provider-hero,
+.tds-companies-hero,
+.tds-wellness-hero,
+.tds-saved-hero {
+  min-height: auto !important;
+}
+
+@media (max-width: 760px) {
+  .tds-join-hero h1,
+  .tds-business-hero h1,
+  .tds-provider-hero h1,
+  .tds-companies-hero h1,
+  .tds-wellness-hero h1,
+  .tds-provider-detail-hero h1,
+  .tds-company-detail-hero h1,
+  .tds-saved-hero h1,
+  .tds-class-hero h1,
+  .tds-profile-intro h1,
+  .tds-auth-card h1,
+  .tds-profile-card h1,
+  .tds-page-header-card h1,
+  .tds-class-empty h1 {
+    font-size: clamp(2rem, 9vw, 3rem) !important;
+    line-height: 1.08 !important;
+  }
+
+  .tds-join-section h2,
+  .tds-business-form-heading h2,
+  .tds-provider-benefit-card h2 {
+    font-size: clamp(1.8rem, 7vw, 2.45rem) !important;
+  }
+}
