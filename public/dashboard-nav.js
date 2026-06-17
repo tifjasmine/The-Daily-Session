@@ -49,7 +49,9 @@
     Array.from(navLinks.children).forEach((child) => {
       const childText = textOf(child);
       if (child.matches("button") && (childText === "Calendar" || childText === "Profile")) child.remove();
-      if (child.matches(".tds-nav-menu") && childText.startsWith("Explore")) child.remove();
+      if (child.matches(".tds-nav-menu") && (childText.startsWith("Explore") || childText.startsWith("Dashboard"))) {
+        child.remove();
+      }
     });
 
     const logoutButton = Array.from(navLinks.querySelectorAll(":scope > button")).find(
