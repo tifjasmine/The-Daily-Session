@@ -1,0 +1,31 @@
+.tds-calendar-board,
+.tds-companies-list,
+.tds-wellness-page .tds-wellness-grid {
+  contain: layout paint;
+}
+
+.tds-month-grid button,
+.tds-day-card,
+.tds-company-card,
+.tds-provider-card {
+  contain: layout paint style;
+}
+
+.tds-day-card,
+.tds-company-card,
+.tds-provider-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 180px;
+}
+
+.tds-calendar-tools select,
+.tds-calendar-tools input,
+.tds-companies-tabs button,
+.tds-companies-controls input,
+.tds-companies-controls button {
+  touch-action: manipulation;
+}
+
+.tds-day-list {
+  overscroll-behavior: contain;
+}
