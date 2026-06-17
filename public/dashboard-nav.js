@@ -104,14 +104,37 @@
     navLinks.insertBefore(wrapper, logoutButton || null);
   };
 
-  const runSoon = () => window.requestAnimationFrame(enhanceNav);
+  let scheduled = false;
+  let retryTimer = null;
+
+  const runSoon = () => {
+    if (scheduled) return;
+    scheduled = true;
+    window.requestAnimationFrame(() => {
+      scheduled = false;
+      enhanceNav();
+    });
+  };
+
+  const retryEnhance = () => {
+    let attempts = 0;
+    window.clearInterval(retryTimer);
+    retryTimer = window.setInterval(() => {
+      attempts += 1;
+      runSoon();
+
+      if (document.querySelector(".tds-nav [data-dashboard-nav]") || attempts >= 25) {
+        window.clearInterval(retryTimer);
+      }
+    }, 80);
+  };
 
   window.addEventListener("popstate", () => {
     document.querySelectorAll(".tds-nav [data-dashboard-nav]").forEach((element) => element.remove());
     document.querySelectorAll(".tds-nav [data-dashboard-enhanced]").forEach((element) => {
       delete element.dataset.dashboardEnhanced;
     });
-    runSoon();
+    retryEnhance();
   });
 
   window.addEventListener("pointerdown", (event) => {
@@ -126,6 +149,5 @@
     }
   });
 
-  new MutationObserver(runSoon).observe(document.documentElement, { childList: true, subtree: true });
-  runSoon();
+  retryEnhance();
 })();
