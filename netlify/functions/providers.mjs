@@ -25,6 +25,10 @@ const getAllText = (value) => {
 };
 
 const getFirstText = (value) => getAllText(value)[0] || "";
+const isPendingStatus = (record) => {
+  const status = getText(getField(record.fields || {}, ["Status"])).toLowerCase();
+  return ["pending", "submitted", "application received", "in review"].includes(status);
+};
 
 const getPhotoUrl = (value) => {
   if (Array.isArray(value)) {
@@ -129,7 +133,7 @@ export const handler = async () => {
       }
 
       const page = await response.json();
-      records.push(...(page.records || []));
+      records.push(...(page.records || []).filter((record) => !isPendingStatus(record)));
       offset = page.offset || "";
     } while (offset);
 
