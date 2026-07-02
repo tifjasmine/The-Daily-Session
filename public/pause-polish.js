@@ -1,5 +1,5 @@
 (function () {
-  const LOGO_SRC = "/pause-header-logo.svg";
+  const LOGO_SRC = "/pause-header-logo.svg?v=20260701b";
 
   const logoImage = (className) => `
     <img class="${className}" src="${LOGO_SRC}" alt="The Daily Session Philadelphia" decoding="async" />
@@ -7,20 +7,20 @@
 
   const polish = () => {
     document.querySelectorAll(".tds-nav .tds-nav-logo").forEach((logo) => {
-      if (logo.dataset.pauseLogoVersion === "asset-left-cream-v1") return;
-      logo.dataset.pauseLogoVersion = "asset-left-cream-v1";
+      if (logo.dataset.pauseLogoVersion === "asset-left-cream-v2") return;
+      logo.dataset.pauseLogoVersion = "asset-left-cream-v2";
       logo.innerHTML = logoImage("tds-header-logo-img");
     });
 
     document.querySelectorAll(".tds-pause-brand").forEach((brand) => {
-      if (brand.dataset.pauseLogoVersion === "asset-pause-cream-v1") return;
-      brand.dataset.pauseLogoVersion = "asset-pause-cream-v1";
+      if (brand.dataset.pauseLogoVersion === "asset-pause-cream-v2") return;
+      brand.dataset.pauseLogoVersion = "asset-pause-cream-v2";
       brand.innerHTML = logoImage("tds-pause-brand-img");
     });
 
     document.querySelectorAll(".tds-brand-lockup").forEach((brand) => {
-      if (brand.dataset.pauseLogoVersion === "asset-hero-cream-v1") return;
-      brand.dataset.pauseLogoVersion = "asset-hero-cream-v1";
+      if (brand.dataset.pauseLogoVersion === "asset-hero-cream-v2") return;
+      brand.dataset.pauseLogoVersion = "asset-hero-cream-v2";
       brand.innerHTML = logoImage("tds-hero-logo-img");
     });
   };
