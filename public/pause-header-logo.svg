@@ -3,21 +3,22 @@
   <desc id="desc">The Daily Session Philadelphia horizontal logo with a calendar mark.</desc>
   <defs>
     <style>
-      .cream{fill:#fff7ef}.orange{fill:#d9602d}.orange2{fill:#f2a65e}.tan{fill:#d5894d}.brown{fill:#3d2314}.line{stroke:#d9824a;stroke-width:4;stroke-linecap:round}.serif{font-family:Georgia, 'Times New Roman', serif;font-weight:700}.sans{font-family:Inter, Avenir, Helvetica, Arial, sans-serif;font-weight:900;letter-spacing:.24em}
+      .cream{fill:#fff7ef}.orange{fill:#d9602d}.gold{fill:#f2a65e}.tan{fill:#d5894d}.body{fill:#5a321f}.body2{fill:#6b3b22}.ring{fill:#3d2314}.line{stroke:#d9824a;stroke-width:4;stroke-linecap:round}.serif{font-family:Georgia, 'Times New Roman', serif;font-weight:700}.sans{font-family:Inter, Avenir, Helvetica, Arial, sans-serif;font-weight:900;letter-spacing:.24em}
     </style>
   </defs>
   <g transform="translate(4 10)">
-    <rect x="0" y="0" width="84" height="84" rx="16" class="cream" opacity="0.98"/>
-    <path d="M0 16C0 7.16 7.16 0 16 0h52c8.84 0 16 7.16 16 16v24H0z" class="orange"/>
-    <path d="M0 40h84v28c0 8.84-7.16 16-16 16H16C7.16 84 0 76.84 0 68z" class="cream"/>
-    <rect x="25" y="-8" width="9" height="28" rx="5" class="brown"/>
-    <rect x="51" y="-8" width="9" height="28" rx="5" class="brown"/>
-    <rect x="18" y="50" width="15" height="12" rx="3" class="orange2"/>
-    <rect x="36" y="50" width="15" height="12" rx="3" class="tan"/>
-    <rect x="54" y="50" width="15" height="12" rx="3" fill="#8b5a35"/>
-    <rect x="18" y="66" width="15" height="12" rx="3" class="tan"/>
-    <rect x="36" y="66" width="15" height="12" rx="3" fill="#9c6338"/>
-    <rect x="54" y="66" width="15" height="12" rx="3" fill="#7a492b"/>
+    <rect x="0" y="0" width="84" height="84" rx="16" class="body"/>
+    <rect x="2" y="2" width="80" height="80" rx="15" fill="none" stroke="#7a4529" stroke-width="3"/>
+    <path d="M0 16C0 7.16 7.16 0 16 0h52c8.84 0 16 7.16 16 16v25H0z" class="orange"/>
+    <path d="M0 38h84v9H0z" fill="#c95228" opacity="0.95"/>
+    <rect x="25" y="-8" width="9" height="29" rx="5" class="ring"/>
+    <rect x="51" y="-8" width="9" height="29" rx="5" class="ring"/>
+    <rect x="17" y="51" width="15" height="12" rx="3" class="gold"/>
+    <rect x="35" y="51" width="15" height="12" rx="3" class="gold" opacity="0.9"/>
+    <rect x="53" y="51" width="15" height="12" rx="3" class="tan" opacity="0.62"/>
+    <rect x="17" y="67" width="15" height="12" rx="3" class="tan"/>
+    <rect x="35" y="67" width="15" height="12" rx="3" class="body2"/>
+    <rect x="53" y="67" width="15" height="12" rx="3" class="body2" opacity="0.8"/>
   </g>
   <g transform="translate(116 0)">
     <text x="0" y="35" class="sans" font-size="19" fill="#d9824a">THE</text>
