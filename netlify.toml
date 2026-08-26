@@ -31,6 +31,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/provider-applications"
+  to = "/.netlify/functions/provider-applications"
+  status = 200
+
+[[redirects]]
+  from = "/api/visitors-locked"
+  to = "/.netlify/functions/visitors-locked"
+  status = 200
+
+[[redirects]]
   from = "/api/companies"
   to = "/.netlify/functions/companies"
   status = 200
