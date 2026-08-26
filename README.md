@@ -33,6 +33,23 @@ Optional overrides are already defaulted to the current base/table:
 
 Only set `AIRTABLE_VIEW_ID` if you intentionally want the site limited to one Airtable view.
 
+## Airtable Studio Applications
+
+The studio application page submits through `/api/studio-application`.
+
+Recommended token name for this form:
+
+- `AIRTABLE_STUDIO_APPLICATIONS_TOKEN`
+
+The function falls back to `AIRTABLE_TOKEN` if the studio-specific token is not set.
+
+Optional overrides:
+
+- `AIRTABLE_STUDIO_APPLICATIONS_TABLE_ID`
+- `AIRTABLE_STUDIO_APPLICATIONS_TABLE`
+
+If no studio applications table is set, the function tries `Studio Applications`, `Studio Info 2`, `Studio Info`, then `Studios`. Matching fields are filled automatically, and `Status` / `Application Status` is set to `Pending Review` when that field exists.
+
 ## Stripe Membership
 
 The signup page starts Stripe Checkout through `/api/create-checkout-session`.

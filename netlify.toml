@@ -41,6 +41,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/studio-application"
+  to = "/.netlify/functions/studio-application"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

@@ -17,6 +17,8 @@ const content = {
   studiosDescription: "Local studios & instructors"
 };
 
+const OPEN_PUBLIC_PATHS = new Set(["/", "/business"]);
+
 const floorToMinute = (date) => {
   const d = new Date(date);
   d.setSeconds(0, 0);
@@ -541,7 +543,7 @@ const HeaderLogo = () => (
   </button>
 );
 
-const AppNav = ({ member, onLogout }) => {
+const AppNav = ({ member, onLogout, paused = false }) => {
   const [isExploreOpen, setIsExploreOpen] = useState(false);
   const [isJoinOpen, setIsJoinOpen] = useState(false);
   const navRef = useRef(null);
@@ -585,6 +587,23 @@ const AppNav = ({ member, onLogout }) => {
     <nav className="tds-nav" aria-label="Main navigation" ref={navRef}>
       <HeaderLogo />
       <div>
+        {paused ? (
+          <>
+            <button type="button" className={navClass("/")} onClick={() => goTo("/")}>
+              Home
+            </button>
+            <button type="button" className={navClass("/business")} onClick={() => goTo("/business")}>
+              Studio Application
+            </button>
+            <button type="button" onClick={() => goTo("/login")}>
+              Log In
+            </button>
+            <button type="button" className="tds-nav-cta" onClick={() => goTo("/signup")}>
+              Become a Member
+            </button>
+          </>
+        ) : (
+          <>
         <button type="button" className={navClass("/")} onClick={() => goTo("/")}>
           Home
         </button>
@@ -677,6 +696,8 @@ const AppNav = ({ member, onLogout }) => {
           <button type="button" onClick={() => goTo("/login")}>
             Log In
           </button>
+        )}
+          </>
         )}
       </div>
     </nav>
@@ -1087,9 +1108,11 @@ const emptyBusinessForm = {
   businessName: "",
   address: "",
   neighborhood: [],
+  otherNeighborhood: "",
   website: "",
   instagram: "",
   category: [],
+  otherCategory: "",
   classDesc: "",
   avgSize: "",
   price: "",
@@ -1133,6 +1156,7 @@ const BusinessSignupPage = ({ member, onLogout }) => {
   const [form, setForm] = useState(emptyBusinessForm);
   const [message, setMessage] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -1148,7 +1172,7 @@ const BusinessSignupPage = ({ member, onLogout }) => {
     });
   };
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault();
     setMessage("");
     setIsSubmitted(false);
@@ -1163,18 +1187,45 @@ const BusinessSignupPage = ({ member, onLogout }) => {
       return;
     }
 
+    if (form.neighborhood.includes("Other") && !form.otherNeighborhood.trim()) {
+      setMessage("Tell us the other neighborhood before submitting.");
+      return;
+    }
+
+    if (form.category.includes("Other") && !form.otherCategory.trim()) {
+      setMessage("Tell us the other category before submitting.");
+      return;
+    }
+
     if (!form.signature || !form.authConsent || !form.listedConsent) {
       setMessage("Add your signature and the required consents before submitting.");
       return;
     }
 
-    setIsSubmitted(true);
-    setMessage("Application ready. Connect this form to Airtable when your business table is set.");
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/studio-application", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(form)
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "Application could not be submitted.");
+
+      setIsSubmitted(true);
+      setForm(emptyBusinessForm);
+      setMessage("Application received. We will review your studio and follow up soon.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Application could not be submitted.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <main className="tds-business-page">
-      <AppNav member={member} onLogout={onLogout} />
+      <AppNav member={member} onLogout={onLogout} paused />
       <section className="tds-business-hero">
         <div className="tds-business-hero-copy">
           <HeaderLogo />
@@ -1234,7 +1285,7 @@ const BusinessSignupPage = ({ member, onLogout }) => {
                   required
                   value={form.fullName}
                   onChange={(event) => updateField("fullName", event.target.value)}
-                  placeholder="Tiffany Wright"
+                  placeholder="Your full name"
                 />
               </label>
               <label>
@@ -1295,6 +1346,16 @@ const BusinessSignupPage = ({ member, onLogout }) => {
                   </button>
                 ))}
               </div>
+              {form.neighborhood.includes("Other") ? (
+                <label className="tds-business-other-field">
+                  Other neighborhood
+                  <input
+                    value={form.otherNeighborhood}
+                    onChange={(event) => updateField("otherNeighborhood", event.target.value)}
+                    placeholder="Type the neighborhood"
+                  />
+                </label>
+              ) : null}
             </div>
             <div className="tds-business-grid">
               <label>
@@ -1328,6 +1389,16 @@ const BusinessSignupPage = ({ member, onLogout }) => {
                   </button>
                 ))}
               </div>
+              {form.category.includes("Other") ? (
+                <label className="tds-business-other-field">
+                  Other category
+                  <input
+                    value={form.otherCategory}
+                    onChange={(event) => updateField("otherCategory", event.target.value)}
+                    placeholder="Type the category"
+                  />
+                </label>
+              ) : null}
             </div>
           </fieldset>
 
@@ -1445,10 +1516,65 @@ const BusinessSignupPage = ({ member, onLogout }) => {
               {message}
             </p>
           ) : null}
-          <button type="submit" className="tds-business-submit">
-            Submit Application
+          <button type="submit" className="tds-business-submit" disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit Application"}
           </button>
         </form>
+      </section>
+    </main>
+  );
+};
+
+const PauseGatePage = ({ path }) => {
+  const isLogin = path === "/login";
+  const [form, setForm] = useState({ name: "", email: "" });
+  const [message, setMessage] = useState("");
+
+  const submit = (event) => {
+    event.preventDefault();
+    setMessage("You are on the list. We will send the good news soon.");
+    setForm({ name: "", email: "" });
+  };
+
+  return (
+    <main className="tds-pause-page">
+      <AppNav paused />
+      <section className="tds-pause-shell">
+        <div className="tds-pause-copy">
+          <span className="tds-pause-kicker">The Daily Session</span>
+          <h1>
+            {isLogin
+              ? "Please hold while we make The Daily Session even better."
+              : "The Daily Session is getting a glow-up."}
+          </h1>
+          <p>
+            {isLogin
+              ? "Already a member or beta user? Drop your email below. Because of the delay, we promise to add an extra year of free access when the full site opens back up."
+              : "We are polishing the full member experience, partner pages, and application flow. Drop your email and we will let you know as soon as everything is ready."}
+          </p>
+          <form className="tds-pause-form" onSubmit={submit}>
+            <label>
+              Name
+              <input
+                value={form.name}
+                onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                placeholder="Your name"
+              />
+            </label>
+            <label>
+              Email
+              <input
+                required
+                type="email"
+                value={form.email}
+                onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+                placeholder="you@email.com"
+              />
+            </label>
+            <button type="submit">Keep me posted</button>
+          </form>
+          {message ? <p className="tds-pause-success">{message}</p> : null}
+        </div>
       </section>
     </main>
   );
@@ -4241,6 +4367,10 @@ export default function App() {
   const currentDate = useMemo(() => formatEasternLongDate(now), [now]);
   const headingParts = content.mainHeading.split(" ");
 
+  if (!OPEN_PUBLIC_PATHS.has(path)) {
+    return <PauseGatePage path={path} />;
+  }
+
   if (path === "/login") {
     return <LoginPage onMemberChange={setMember} onSessionChange={setAuthSession} />;
   }
@@ -4364,7 +4494,7 @@ export default function App() {
 
   return (
     <main className="tds-page">
-      <AppNav member={member} onLogout={handleLogout} />
+      <AppNav member={member} onLogout={handleLogout} paused />
       <section className="tds-hero" aria-labelledby="tds-heading">
         <div className="tds-copy">
           <BrandLockup />
