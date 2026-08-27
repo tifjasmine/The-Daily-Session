@@ -1,6 +1,6 @@
 const AIRTABLE_API_URL = "https://api.airtable.com/v0";
 const DEFAULT_BASE_ID = "appQxIhwr00DmKBx5";
-const DEFAULT_TABLES = ["Studio Applications", "Studio Info 2", "Studio Info", "Studios"];
+const DEFAULT_TABLES = ["Studio Sign Up"];
 
 const json = (statusCode, body) => ({
   statusCode,
@@ -14,14 +14,16 @@ const getText = (value) => {
   return String(value).trim();
 };
 
-const cleanList = (values = [], otherValue = "") => {
+const cleanList = (values = []) => {
   const list = Array.isArray(values) ? values : [values];
-  const cleaned = list.map(getText).filter(Boolean);
-  if (cleaned.includes("Other") && getText(otherValue)) {
-    return [...cleaned.filter((value) => value !== "Other"), getText(otherValue)];
-  }
-  return cleaned;
+  return list.map(getText).filter(Boolean).filter((value) => value !== "Other");
 };
+
+const cleanUnlisted = (...values) =>
+  values
+    .map(getText)
+    .filter(Boolean)
+    .join(", ");
 
 const fetchTables = async ({ token, baseId }) => {
   const response = await fetch(`${AIRTABLE_API_URL}/meta/bases/${baseId}/tables`, {
@@ -39,16 +41,42 @@ const findTable = (tables, preferredTable) => {
     .find(Boolean);
 };
 
-const findField = (fieldMap, names) => names.find((name) => fieldMap.has(name));
+const normalizeKey = (value) => getText(value).toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+const findField = (fieldMap, names) => {
+  const fields = Array.from(fieldMap.keys());
+  const direct = names.find((name) => fieldMap.has(name));
+  if (direct) return direct;
+
+  const normalizedNames = names.map(normalizeKey);
+  const normalized = fields.find((field) => normalizedNames.includes(normalizeKey(field)));
+  if (normalized) return normalized;
+
+  return fields.find((field) => {
+    const normalizedField = normalizeKey(field);
+    return normalizedNames.some((name) => normalizedField.includes(name) || name.includes(normalizedField));
+  });
+};
 
 const coerceValue = (field, value) => {
   if (value === undefined || value === null) return undefined;
   if (Array.isArray(value) && !value.length) return undefined;
   if (!Array.isArray(value) && getText(value) === "" && field.type !== "checkbox") return undefined;
 
+  if (field.type === "multipleAttachments") return undefined;
   if (field.type === "checkbox") return Boolean(value);
-  if (field.type === "multipleSelects") return Array.isArray(value) ? value : [getText(value)];
-  if (field.type === "singleSelect") return Array.isArray(value) ? getText(value[0]) : getText(value);
+  if (field.type === "multipleSelects") {
+    const choices = field.options?.choices?.map((choice) => choice.name) || [];
+    const list = Array.isArray(value) ? value : [getText(value)];
+    const filtered = choices.length ? list.filter((item) => choices.includes(getText(item))) : list;
+    return filtered.length ? filtered : undefined;
+  }
+  if (field.type === "singleSelect") {
+    const choices = field.options?.choices?.map((choice) => choice.name) || [];
+    const nextValue = Array.isArray(value) ? getText(value[0]) : getText(value);
+    if (choices.length && !choices.includes(nextValue)) return undefined;
+    return nextValue;
+  }
   if (field.type === "number") {
     const number = Number(getText(value).replace(/[^0-9.-]/g, ""));
     return Number.isFinite(number) ? number : undefined;
@@ -80,27 +108,43 @@ const setPendingStatus = (fields, fieldMap) => {
 const buildFields = (payload, table) => {
   const fieldMap = new Map((table.fields || []).map((field) => [field.name, field]));
   const fields = {};
-  const neighborhoods = cleanList(payload.neighborhood, payload.otherNeighborhood);
-  const categories = cleanList(payload.category, payload.otherCategory);
+  const neighborhoods = cleanList(payload.neighborhood);
+  const categories = cleanList(payload.category);
+  const subcategories = cleanList(payload.subcategory);
 
-  setField(fields, fieldMap, ["Full Name", "Name", "Contact Name", "Submitted By"], payload.fullName);
+  setField(fields, fieldMap, ["Full Name", "Contact Name", "Submitted By", "Applicant Name", "Your Name", "First and Last Name"], payload.fullName);
   setField(fields, fieldMap, ["Email", "Contact Email"], payload.email);
-  setField(fields, fieldMap, ["Your Role at the Studio", "Role", "Contact Role"], payload.role);
-  setField(fields, fieldMap, ["Studio/Business Name", "Studio Name", "Business Name", "Name"], payload.businessName);
+  setField(fields, fieldMap, ["Studio Role", "Your Role at the Studio", "Role at the Studio", "Role", "Contact Role", "Title"], payload.role);
+  setField(fields, fieldMap, ["Studio/Business Name", "Studio Name", "Business Name", "Studio", "Business", "Name"], payload.businessName);
   setField(fields, fieldMap, ["Studio Address", "Address"], payload.address);
   setField(fields, fieldMap, ["Studio Neighborhood", "Neighborhood", "Philadelphia Neighborhood"], neighborhoods);
-  setField(fields, fieldMap, ["Other Neighborhood"], payload.otherNeighborhood);
+  setField(fields, fieldMap, ["Neighborhood Unlisted", "Studio Neighborhood Unlisted", "Other Neighborhood", "Unlisted Neighborhood"], payload.otherNeighborhood);
   setField(fields, fieldMap, ["Website", "Studio Site", "Site"], payload.website);
   setField(fields, fieldMap, ["Instagram / Social", "Instagram", "Social Media"], payload.instagram);
   setField(fields, fieldMap, ["Category", "Primary Category"], categories);
-  setField(fields, fieldMap, ["Other Category"], payload.otherCategory);
+  setField(fields, fieldMap, ["Category Unlisted", "Other Category", "Unlisted Category"], payload.otherCategory);
+  setField(fields, fieldMap, ["Subcategory", "Subcategories", "Class Subcategory", "Class Subcategories"], subcategories);
+  setField(fields, fieldMap, ["Subcategory Unlisted", "Subcategories Unlisted", "Other Subcategory", "Unlisted Subcategory"], payload.otherSubcategory);
   setField(fields, fieldMap, ["Describe your classes", "Class Description", "Class Types"], payload.classDesc);
   setField(fields, fieldMap, ["Average Class Size", "Avg Class Size"], payload.avgSize);
   setField(fields, fieldMap, ["Price Range per Class", "Price Range", "Drop in Rate"], payload.price);
   setField(fields, fieldMap, ["Booking Platform"], payload.booking);
   setField(fields, fieldMap, ["Public Calendar Link", "Schedule URL", "Booking Link", "Booking URL"], payload.calendar);
-  setField(fields, fieldMap, ["Studio Perks", "Member Perks", "Member Perk"], payload.studioPerks);
-  setField(fields, fieldMap, ["Typed Signature", "Signature"], payload.signature);
+  setField(
+    fields,
+    fieldMap,
+    [
+      "Studio Perks",
+      "Member Perks",
+      "Member Perk",
+      "Perk",
+      "Perk Details",
+      "Would you be open to offering a perk to Daily Session members",
+      "Would you be open to offering a perk to Daily Session members ( Free first class, % off drop-in, % off class pack, etc)"
+    ],
+    payload.studioPerks
+  );
+  setField(fields, fieldMap, ["Typed Signature", "Signature Text", "Applicant Signature", "Signed Name", "Signature"], payload.signature);
   setField(fields, fieldMap, ["Media Consent"], payload.mediaConsent);
   setField(fields, fieldMap, ["Authorized Representative", "Authorization Consent"], payload.authConsent);
   setField(fields, fieldMap, ["Listed Consent", "Calendar Consent"], payload.listedConsent);
@@ -134,7 +178,7 @@ export const handler = async (event) => {
 
     const tables = await fetchTables({ token, baseId });
     const table = findTable(tables, preferredTable);
-    if (!table) return json(404, { error: "Unable to find a studio application Airtable table" });
+    if (!table) return json(404, { error: "Unable to find the Studio Sign Up Airtable table" });
 
     const fields = buildFields(payload, table);
     if (!Object.keys(fields).length) {
@@ -147,7 +191,7 @@ export const handler = async (event) => {
         authorization: `Bearer ${token}`,
         "content-type": "application/json"
       },
-      body: JSON.stringify({ fields, typecast: true })
+      body: JSON.stringify({ fields })
     });
     const result = await response.json().catch(() => ({}));
 

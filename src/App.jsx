@@ -167,7 +167,7 @@ const getCategoryPillStyle = (categoryLabel) => {
 
 const partnerCategories = [
   "All Categories",
-  "Mind-Body Practices",
+  "Mind–Body Practices",
   "Dance & Movement Arts",
   "Sports & Fitness",
   "Acrobatics & Circus Arts",
@@ -539,7 +539,14 @@ const loadAuthenticatedMember = async (session) => {
 
 const HeaderLogo = () => (
   <button type="button" className="tds-nav-logo" onClick={() => navigateTo("/")}>
-    The Daily Session
+    <span className="tds-nav-logo-mark" aria-hidden="true">
+      <span />
+    </span>
+    <span className="tds-nav-logo-type">
+      <span>The</span>
+      <strong>Daily Session</strong>
+      <small>Philadelphia</small>
+    </span>
   </button>
 );
 
@@ -992,32 +999,85 @@ const CreateAccountPage = ({ onMemberChange, onSessionChange }) => {
 };
 
 const businessNeighborhoods = [
+  "Bensalem, PA",
+  "Bridesburg",
+  "Callowhill",
   "Center City",
-  "Fishtown",
-  "Old City",
-  "Rittenhouse",
-  "South Philly",
-  "Queens Village",
-  "Northern Liberties",
-  "Fairmount",
-  "Manayunk",
-  "West Philadelphia",
-  "East Falls",
+  "Cheltenham",
   "Cherry Hill, NJ",
+  "Chestnut Hill",
+  "East Falls",
+  "Fairmount",
+  "Fishtown",
+  "Germantown",
+  "Greater Philadelphia Area",
+  "Kensington",
+  "Manayunk",
+  "Midtown Village",
+  "Northeast Philadelphia",
+  "Northern Liberties",
+  "Old City",
+  "Philadelphia",
+  "Port Richmond",
+  "Queens Village",
+  "Rittenhouse",
+  "Roxborough",
+  "South Philadelphia",
+  "University City",
+  "West Passyunk",
+  "West Philadelphia",
+  "Willow Grove",
   "Other"
 ];
 
 const businessCategories = [
-  "Mind-Body Practices",
-  "Dance & Movement Arts",
-  "Sports & Fitness",
   "Acrobatics & Circus Arts",
   "Creative Arts",
-  "Martial Arts",
-  "Recreation",
+  "Dance & Movement Arts",
   "Food and Drinks",
-  "Wellness & Recovery",
-  "Climbing & Adventure",
+  "Martial Arts",
+  "Mind-Body Practices",
+  "Performing Arts",
+  "Recreation",
+  "Sports & Fitness",
+  "Other"
+];
+
+const businessSubcategories = [
+  "Acrobatics",
+  "Aerial",
+  "Aerobics",
+  "Ballet",
+  "Chen Taiji",
+  "Choir",
+  "Contemporary & Lyrical",
+  "Culinary Workshops",
+  "Cultural Dance",
+  "Cyr Wheel",
+  "Dance Fitness",
+  "DIY Workshops",
+  "Flexibility",
+  "Heated Pilates",
+  "Heated Yoga",
+  "Hip Hop",
+  "Jazz",
+  "Latin & Social Dancing",
+  "Martial Arts Fusion",
+  "Mindfulness & Wellness",
+  "Painting",
+  "Pilates",
+  "Plant & Floral Crafting",
+  "Pole Dance",
+  "Printmaking",
+  "Reading and Writing",
+  "Recreational Activities",
+  "Sensual Movement",
+  "Skateboarding",
+  "Strength & Conditioning",
+  "Tap Dance",
+  "Theatre & Improv",
+  "Visual & Craft Arts",
+  "Yoga",
   "Other"
 ];
 
@@ -1113,6 +1173,8 @@ const emptyBusinessForm = {
   instagram: "",
   category: [],
   otherCategory: "",
+  subcategory: [],
+  otherSubcategory: "",
   classDesc: "",
   avgSize: "",
   price: "",
@@ -1150,6 +1212,52 @@ const emptyProviderForm = {
   heardAbout: "",
   notes: "",
   agree: false
+};
+
+const MultiSelectDropdown = ({ label, required = false, options, values, onToggle, placeholder }) => {
+  const detailsRef = useRef(null);
+  const summary = values.length ? `${values.length} selected` : placeholder;
+
+  useEffect(() => {
+    const closeOnOutsideClick = (event) => {
+      if (!detailsRef.current || detailsRef.current.contains(event.target)) return;
+      detailsRef.current.open = false;
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    return () => document.removeEventListener("pointerdown", closeOnOutsideClick);
+  }, []);
+
+  return (
+    <div className="tds-business-choice-group">
+      <span>{label}{required ? " *" : ""}</span>
+      <details className="tds-business-multiselect" ref={detailsRef}>
+        <summary>
+          <span>{summary}</span>
+          <span aria-hidden="true">v</span>
+        </summary>
+        <div className="tds-business-multiselect-menu">
+          {options.map((item) => (
+            <label key={item}>
+              <input
+                type="checkbox"
+                checked={values.includes(item)}
+                onChange={() => onToggle(item)}
+              />
+              <span>{item}</span>
+            </label>
+          ))}
+        </div>
+      </details>
+      {values.length ? (
+        <div className="tds-business-selected-list" aria-label={`Selected ${label.toLowerCase()}`}>
+          {values.map((item) => (
+            <span key={item}>{item}</span>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
 };
 
 const BusinessSignupPage = ({ member, onLogout }) => {
@@ -1197,6 +1305,11 @@ const BusinessSignupPage = ({ member, onLogout }) => {
       return;
     }
 
+    if (form.subcategory.includes("Other") && !form.otherSubcategory.trim()) {
+      setMessage("Tell us the other subcategory before submitting.");
+      return;
+    }
+
     if (!form.signature || !form.authConsent || !form.listedConsent) {
       setMessage("Add your signature and the required consents before submitting.");
       return;
@@ -1228,7 +1341,6 @@ const BusinessSignupPage = ({ member, onLogout }) => {
       <AppNav member={member} onLogout={onLogout} paused />
       <section className="tds-business-hero">
         <div className="tds-business-hero-copy">
-          <HeaderLogo />
           <span className="tds-business-eyebrow">For studios and wellness businesses</span>
           <h1>
             Get your classes in front of <em>Philadelphia adults</em> who are ready to move.
@@ -1239,29 +1351,15 @@ const BusinessSignupPage = ({ member, onLogout }) => {
             searching for what you offer.
           </p>
           <div className="tds-business-pills" aria-label="Business listing highlights">
-            <span>Classes and workshops only</span>
+            <span>Classes and workshops</span>
             <span>18+ audience</span>
             <span>Member perks welcome</span>
           </div>
-          <dl className="tds-business-proof">
-            <div>
-              <dt>50+</dt>
-              <dd>studios listed</dd>
-            </div>
-            <div>
-              <dt>100+</dt>
-              <dd>members and growing</dd>
-            </div>
-            <div>
-              <dt>Free</dt>
-              <dd>listing for a limited time</dd>
-            </div>
-          </dl>
         </div>
         <aside className="tds-business-card" aria-label="Listing preview">
-          <span>Free listing</span>
+          <span>Free to join (for a limited time)</span>
           <h2>Show up where people are already looking.</h2>
-          <p>Send your details once. We review the fit, polish the listing, and keep discovery simple.</p>
+          <p>Send your studio details once. We review the fit, polish the listing, and keep discovery simple.</p>
         </aside>
       </section>
 
@@ -1332,31 +1430,24 @@ const BusinessSignupPage = ({ member, onLogout }) => {
                 placeholder="123 Main St, Philadelphia PA"
               />
             </label>
-            <div className="tds-business-choice-group">
-              <span>Studio Neighborhood *</span>
-              <div>
-                {businessNeighborhoods.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    className={form.neighborhood.includes(item) ? "is-selected" : ""}
-                    onClick={() => toggleChoice("neighborhood", item)}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-              {form.neighborhood.includes("Other") ? (
-                <label className="tds-business-other-field">
-                  Other neighborhood
-                  <input
-                    value={form.otherNeighborhood}
-                    onChange={(event) => updateField("otherNeighborhood", event.target.value)}
-                    placeholder="Type the neighborhood"
-                  />
-                </label>
-              ) : null}
-            </div>
+            <MultiSelectDropdown
+              label="Studio Neighborhood"
+              required
+              options={businessNeighborhoods}
+              values={form.neighborhood}
+              onToggle={(item) => toggleChoice("neighborhood", item)}
+              placeholder="Select neighborhoods"
+            />
+            {form.neighborhood.includes("Other") ? (
+              <label className="tds-business-other-field">
+                Other neighborhood
+                <input
+                  value={form.otherNeighborhood}
+                  onChange={(event) => updateField("otherNeighborhood", event.target.value)}
+                  placeholder="Type the neighborhood"
+                />
+              </label>
+            ) : null}
             <div className="tds-business-grid">
               <label>
                 Website
@@ -1375,31 +1466,41 @@ const BusinessSignupPage = ({ member, onLogout }) => {
                 />
               </label>
             </div>
-            <div className="tds-business-choice-group">
-              <span>Category *</span>
-              <div>
-                {businessCategories.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    className={form.category.includes(item) ? "is-selected" : ""}
-                    onClick={() => toggleChoice("category", item)}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-              {form.category.includes("Other") ? (
-                <label className="tds-business-other-field">
-                  Other category
-                  <input
-                    value={form.otherCategory}
-                    onChange={(event) => updateField("otherCategory", event.target.value)}
-                    placeholder="Type the category"
-                  />
-                </label>
-              ) : null}
-            </div>
+            <MultiSelectDropdown
+              label="Category"
+              required
+              options={businessCategories}
+              values={form.category}
+              onToggle={(item) => toggleChoice("category", item)}
+              placeholder="Select categories"
+            />
+            {form.category.includes("Other") ? (
+              <label className="tds-business-other-field">
+                Other category
+                <input
+                  value={form.otherCategory}
+                  onChange={(event) => updateField("otherCategory", event.target.value)}
+                  placeholder="Type the category"
+                />
+              </label>
+            ) : null}
+            <MultiSelectDropdown
+              label="Subcategories"
+              options={businessSubcategories}
+              values={form.subcategory}
+              onToggle={(item) => toggleChoice("subcategory", item)}
+              placeholder="Select subcategories"
+            />
+            {form.subcategory.includes("Other") ? (
+              <label className="tds-business-other-field">
+                Other subcategory
+                <input
+                  value={form.otherSubcategory}
+                  onChange={(event) => updateField("otherSubcategory", event.target.value)}
+                  placeholder="Type the subcategory"
+                />
+              </label>
+            ) : null}
           </fieldset>
 
           <fieldset>
@@ -4497,8 +4598,6 @@ export default function App() {
       <AppNav member={member} onLogout={handleLogout} paused />
       <section className="tds-hero" aria-labelledby="tds-heading">
         <div className="tds-copy">
-          <BrandLockup />
-
           <div className="tds-pill">
             <span className="tds-pill-dot" />
             <span>{content.headerLabel}</span>
@@ -4515,7 +4614,6 @@ export default function App() {
           </h1>
 
           <p>{content.description}</p>
-          <PwaInstallButton />
         </div>
 
         <aside className="tds-panel" aria-label="Daily session statistics">

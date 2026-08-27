@@ -48,7 +48,7 @@ Optional overrides:
 - `AIRTABLE_STUDIO_APPLICATIONS_TABLE_ID`
 - `AIRTABLE_STUDIO_APPLICATIONS_TABLE`
 
-If no studio applications table is set, the function tries `Studio Applications`, `Studio Info 2`, `Studio Info`, then `Studios`. Matching fields are filled automatically, and `Status` / `Application Status` is set to `Pending Review` when that field exists.
+If no studio applications table is set, the function writes to `Studio Sign Up`. Matching fields are filled automatically, and `Status` / `Application Status` is set to `Pending Review` when that field exists.
 
 ## Stripe Membership
 
